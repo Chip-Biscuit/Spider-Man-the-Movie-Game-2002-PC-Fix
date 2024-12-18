@@ -18,7 +18,7 @@ Default for resolution is 2 (1920 x 1080) resolution and aspect ratio edits are 
 
 Default for FOV is 0 which is off/ original game FOV you can set it out using either = 1,2, 3 or 4 each one will set camera zoomed out further incrementally. 
 
-Default for FPS is 60 would recommend leaving it set to this personally but its up to you to change it you may experience issues.
+Default for FPS is 60 you can change it as you wish.
 
 brought to you by Fix Enhancers 
 
