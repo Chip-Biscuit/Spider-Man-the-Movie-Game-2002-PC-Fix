@@ -22,6 +22,10 @@ Default for FOV is 0 which is off/ original game FOV you can set it out using ei
 
 Default for FPS is 60 you can change it as you wish.
 
+If you have any issues please go to discord for help 
+
+https://discord.gg/eVJ7sQH7Cc
+
 brought to you by Fix Enhancers 
 
 Team: 
