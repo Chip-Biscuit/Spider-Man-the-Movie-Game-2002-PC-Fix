@@ -1,4 +1,7 @@
 # Spider-Man-the-Movie-Game-(2002)-PC-Fix
+
+![sm2002](https://github.com/user-attachments/assets/096f330c-4ca2-4245-bd8b-5eeb871d2bdd)
+
 This is the spiderman 2002 PC d3d8 wrapper and Fix Files.
 
 Simply go to releases and download the ZIP file then extract it and move/ copy the d3d8.dll and d3d8.ini to your games install location next to SpiderMan.exe.
