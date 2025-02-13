@@ -2,39 +2,40 @@
 
 ![sm2002](https://github.com/user-attachments/assets/096f330c-4ca2-4245-bd8b-5eeb871d2bdd)
 
-This is the spiderman 2002 PC d3d8 wrapper and Fix Files.
+# Requirements before using fix
+For the fix to work properly you must have patched the game up to the 1.3 release, which also contains major bug fixes. If you have not done so already then you can download the patch from here - https://community.pcgamingwiki.com/files/file/791-spider-man-the-movie-patch-13/ 
 
-Simply go to releases and download the ZIP file then extract it and move/ copy the d3d8.dll and d3d8.ini to your games install location next to SpiderMan.exe.
+# Important Information
+We are aware of an issue with the games FMVs/Movies not scaling correctly and currently playing in a small box. This problem is being worked on but is a very complicated issue to resolve so will take time to fix properly. So please do keep an eye on future updates in the releases area for updated downloads of the fix where this issue may be fixed, however, for now please be patient regarding this issue, thank you!
 
-Always read the README included.
+If you are experiencing a crashing issue with the FMVs/Movies then you may have to re name the folder in your games install location ‘Movies’ to a different name such as ‘Movies Broken’ so then the game plays without the movies at all whilst the crashing issue is being looked into.
 
-We are aware that in this game there is an isue with cutscenes/ movies not scaling properly and playing in a small box. This issue is currently being worked on with hopes of being fixed,
-so keep an eye on any future updates where this problem may be fixed but for now please be patient on this matter, Thankyou.
+# Instructions
+Go to releases and download the latest spiderman2002fix. zip, extract the d3d8.dll and d3d8.ini files into your game folder next to the SpiderMan.exe file and you are good to go! You can edit the settings you wish to use in the d3d8.ini file.
 
-If you get a crashing issue you may have to just re name the folder in your games install location (movies) to (movies none) so that the game plays with no movies at all whilst the crashing issue is investigated.
+# Resolution/Aspect Ratio
+The default for resolution is (2) (1920x1080), which you can change by changing the (2) and choosing the correct number for your resolution.
 
-Make sure you got the 1.3 patch for this game before you play it its important you can get it here 
+Resolution and aspect ratio edits are done together so you will only have to choose your resolution.
 
-https://community.pcgamingwiki.com/files/file/791-spider-man-the-movie-patch-13/
+# FPS
+The default for FPS is (60) you can change it as you wish or fully uncap it with (0) with the FPSLimit option in the d3d8.ini file.
 
-you can edit settings in d3d8.ini 
+# FOV
+The default for FOV is (0) which is the original games FOV. You can choose either 1,2,3 or 4 in the d3d8.ini file and each option will increase the FOV in game.
 
-Default for resolution is 2 (1920 x 1080) resolution and aspect ratio edits are done together so you only have to choose your resolution.
+# Vote to see the game return via GOG Dreamlist
+If you are interested in potentially seeing this game easily available to purchase and use today then go and vote on the games GOG Dreamlist to help make this become a reality, you can vote for the game here and write a message about the game if you wish – https://www.gog.com/dreamlist/game/spider-man-2002 
 
-Default for FOV is 0 which is off/ original game FOV you can set it out using either = 1,2, 3 or 4 each one will set camera zoomed out further incrementally. 
+# Issues/Problems
+If you have any issues, with the fixes then please go to discord for help linked below. https://discord.gg/eVJ7sQH7Cc
 
-Default for FPS is 60 you can change it as you wish.
+Credits
 
-If you have any issues please go to discord for help 
+Credit to Elisha Riedlinger for the base wrapper and ThirteenAG.
 
-https://discord.gg/eVJ7sQH7Cc
+Brought to you by Fix Enhancers - https://fixenhancers.wixsite.com/fix-enhancers
 
-brought to you by Fix Enhancers 
+Team:
 
-https://fixenhancers.wixsite.com/fix-enhancers
-
-Team: 
-
-Chip, JokerAlex21.
-
-credit to  Elisha Riedlinger and 13AG for d3d9hook base code.
+Chip and JokerAlex21.
