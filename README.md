@@ -14,9 +14,7 @@ If you are experiencing a crashing issue with the FMVs/Movies then you may have 
 Go to releases and download the latest spiderman2002fix. zip, extract the d3d8.dll and d3d8.ini files into your game folder next to the SpiderMan.exe file and you are good to go! You can edit the settings you wish to use in the d3d8.ini file.
 
 # Resolution/Aspect Ratio
-The default for resolution is (2) (1920x1080), which you can change by changing the (2) and choosing the correct number for your resolution.
-
-Resolution and aspect ratio edits are done together so you will only have to choose your resolution.
+The default for resolution is 1920x1080 you can enter any width/ height you desire in d3d8.ini
 
 # FPS
 The default for FPS is (60) you can change it as you wish or fully uncap it with (0) with the FPSLimit option in the d3d8.ini file.
