@@ -2,7 +2,7 @@
 
 ![sm2002](https://github.com/user-attachments/assets/096f330c-4ca2-4245-bd8b-5eeb871d2bdd)
 
-#official video guide
+# Official video guide
 https://youtu.be/Hb3Nz8OkbBo?si=dtdpuxO7ZkFQN3Cg
 
 # Requirements before using fix
