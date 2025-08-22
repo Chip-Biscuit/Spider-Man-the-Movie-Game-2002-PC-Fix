@@ -2,6 +2,9 @@
 
 ![sm2002](https://github.com/user-attachments/assets/096f330c-4ca2-4245-bd8b-5eeb871d2bdd)
 
+#official video guide
+https://youtu.be/Hb3Nz8OkbBo?si=dtdpuxO7ZkFQN3Cg
+
 # Requirements before using fix
 For the fix to work properly you must have patched the game up to the 1.3 release, which also contains major bug fixes. If you have not done so already then you can download the patch from here - https://community.pcgamingwiki.com/files/file/791-spider-man-the-movie-patch-13/ 
 
