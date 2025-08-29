@@ -3,14 +3,11 @@
 ![sm2002](https://github.com/user-attachments/assets/096f330c-4ca2-4245-bd8b-5eeb871d2bdd)
 
 # Official video guide
-https://youtu.be/Hb3Nz8OkbBo?si=dtdpuxO7ZkFQN3Cg
-
-# Official video guide
 
 Watch the official fix guide video here on how to install the game and use the fix
 
 <a href="https://youtu.be/Hb3Nz8OkbBo?si=dtdpuxO7ZkFQN3Cg">
-  <img src="![spiderman2002](https://github.com/user-attachments/assets/3ee16d42-5348-4947-8ce5-7d37d4d26372)" alt="Spiderman 2002" width="480" height="360">
+  <img src="https://github.com/user-attachments/assets/3ee16d42-5348-4947-8ce5-7d37d4d26372" alt="Spiderman 2002" width="480" height="360">
 </a><br>
 
 ###### <i>Click the image above to watch the video</i>
