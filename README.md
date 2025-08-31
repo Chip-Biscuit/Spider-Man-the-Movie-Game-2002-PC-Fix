@@ -24,6 +24,11 @@ If you are experiencing a crashing issue with the FMVs/Movies then you may have 
 # Instructions
 Go to releases and download the latest spiderman2002fix. zip, extract the d3d8.dll and d3d8.ini files into your game folder next to the SpiderMan.exe file and you are good to go! You can edit the settings you wish to use in the d3d8.ini file.
 
+# Chip - start up crash issue 
+
+I have spent some time reverse engineering an issue where the game was crashing on start up, this has now been traced to the cause which a dinput.dll has now been included into both fix's to address this so there should be no more start-up crash issues.
+
+
 # Resolution
 The default for resolution is 1920x1080 you can enter any width/ height you desire in d3d8.ini
 
