@@ -10,9 +10,6 @@ Watch the official fix guide video here on how to install the game and use the f
   <img src="https://github.com/user-attachments/assets/3ee16d42-5348-4947-8ce5-7d37d4d26372" alt="Spiderman 2002" width="480" height="360">
 </a><br>
 
-<img width="678" height="834" alt="Spider-Man_2002_Controls_Table" src="https://github.com/user-attachments/assets/b902f502-e565-4db3-8f5b-c30da445c495" />
-
-
 ###### <i>Click the image above to watch the video</i>
 
 
@@ -37,8 +34,9 @@ make sure that your game is using the default keyboard and mouse controlls.
 
 the mapping for the custom controller support is as follows: 
 
-<img width="2898" height="1693" alt="Spider-Man_2002_Xbox_Controller_Layout" src="https://github.com/user-attachments/assets/629632e4-34af-4193-aba6-bdce93e26cff" />
+<img width="2898" height="1693" alt="Spider-Man_2002_Xbox_Controller_Layout" src="https://github.com/user-attachments/assets/629632e4-34af-4193-aba6-bdce93e26cff" /><br>
 
+<img width="678" height="834" alt="Spider-Man_2002_Controls_Table" src="https://github.com/user-attachments/assets/b902f502-e565-4db3-8f5b-c30da445c495" />
 
 # Resolution
 The default for resolution is 1920x1080 you can enter any width/ height you desire in d3d8.ini
