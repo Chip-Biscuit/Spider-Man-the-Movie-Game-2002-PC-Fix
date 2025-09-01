@@ -34,7 +34,7 @@ make sure that your game is using the default keyboard and mouse controlls.
 
 the mapping for the custom controller support is as follows: 
 
-<img width="2803" height="1676" alt="Spider-Man_2002_Xbox_Controller_Layout" src="https://github.com/user-attachments/assets/82c4c72f-c967-4fbd-bafe-759e712f8764" />
+<img width="2898" height="1693" alt="Spider-Man_2002_Xbox_Controller_Layout" src="https://github.com/user-attachments/assets/629632e4-34af-4193-aba6-bdce93e26cff" />
 
 
 # Resolution
