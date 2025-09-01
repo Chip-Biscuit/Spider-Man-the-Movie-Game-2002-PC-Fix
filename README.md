@@ -34,6 +34,8 @@ make sure that your game is using the default keyboard and mouse controlls.
 
 the mapping for the custom controller support is as follows: 
 
+<img width="2803" height="1676" alt="Spider-Man_2002_Xbox_Controller_Layout" src="https://github.com/user-attachments/assets/82c4c72f-c967-4fbd-bafe-759e712f8764" />
+
 
 # Resolution
 The default for resolution is 1920x1080 you can enter any width/ height you desire in d3d8.ini
