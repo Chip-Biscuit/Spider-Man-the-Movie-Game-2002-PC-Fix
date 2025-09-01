@@ -30,8 +30,6 @@ I have spent some time reverse engineering an issue where the game was crashing 
 
 I have also now spent some time writing a fully custom dinput8.dll which provides xinput support for the game this will work with xbox controllers, so if you dont have one you can use ds4 windows or add the game to steam as a non steam game or some other method to fake xinput.
 
-make sure that your game is using the default keyboard and mouse controlls.
-
 the mapping for the custom controller support is as follows: 
 
 <img width="2898" height="1693" alt="Spider-Man_2002_Xbox_Controller_Layout" src="https://github.com/user-attachments/assets/629632e4-34af-4193-aba6-bdce93e26cff" /><br>
