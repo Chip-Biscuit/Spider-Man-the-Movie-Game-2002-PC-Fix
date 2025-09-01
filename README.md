@@ -30,6 +30,8 @@ I have spent some time reverse engineering an issue where the game was crashing 
 
 I have also now spent some time writing a fully custom dinput8.dll which provides xinput support for the game this will work with xbox controllers, so if you dont have one you can use ds4 windows or add the game to steam as a non steam game or some other method to fake xinput.
 
+make sure that your game is using the default keyboard and mouse controlls.
+
 the mapping for the custom controller support is as follows: 
 
 
