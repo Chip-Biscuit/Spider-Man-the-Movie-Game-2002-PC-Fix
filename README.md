@@ -36,7 +36,9 @@ the mapping for the custom controller support is as follows:
 
 <img width="2898" height="1693" alt="Spider-Man_2002_Xbox_Controller_Layout" src="https://github.com/user-attachments/assets/629632e4-34af-4193-aba6-bdce93e26cff" /><br>
 
-<img width="678" height="834" alt="Spider-Man_2002_Controls_Table" src="https://github.com/user-attachments/assets/b902f502-e565-4db3-8f5b-c30da445c495" />
+<img width="678" height="834" alt="Spider-Man_2002_Controls_Table" src="https://github.com/user-attachments/assets/b902f502-e565-4db3-8f5b-c30da445c495" /><br>
+
+for a more in depth look at the controls for the game : https://strategywiki.org/wiki/Spider-Man_(2002)/Controls
 
 # Resolution
 The default for resolution is 1920x1080 you can enter any width/ height you desire in d3d8.ini
