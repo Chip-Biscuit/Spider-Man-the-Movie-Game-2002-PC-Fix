@@ -32,8 +32,8 @@ I have spent some time reverse engineering an issue where the game was crashing 
 
 I have also now spent some time writing a fully custom dinput8.dll which provides xinput support for the game this will work with xbox controllers, so if you dont have one you can use ds4 windows or add the game to steam as a non steam game or some other method to fake xinput.<br>
 If you want custom controller support use custom-controller-support-fix.zip
-<br>
-unfortunately the custom controller support will only work for those without the crashing on start up issue, if you have the crashing on start up issue you categorically must use start-up-crash-with-controller-fix.zip<br>
+<br><br>
+unfortunately the custom controller support will only work for those without the crashing on start up issue, if you have the crashing on start up issue you categorically must use start-up-crash-with-controller-fix.zip<br><br>
 the mapping for the custom controller support is as follows: 
 
 <img width="3291" height="1673" alt="Spider-Man_2002_Xbox_Controller_Layout" src="https://github.com/user-attachments/assets/316b24a5-6ef5-42a8-a88a-2a679368c571" /><br>
