@@ -26,13 +26,15 @@ If you are experiencing crashing on start up issue make sure to download the sta
 # Instructions
 Go to releases and download the fix that you wish to use for your specific use case, each one is detailed in the releases page. 
 
-# Chip 
+## Chip 
 
 I have spent some time reverse engineering an issue where the game was crashing on start up, this has now been traced to the cause which a dinput.dll has now been included into start-up-crash-with-controller-fix.zip in the releases to address this so there should be no more start-up crash issues.
 
 I have also now spent some time writing a fully custom dinput8.dll which provides xinput support for the game this will work with xbox controllers, so if you dont have one you can use ds4 windows or add the game to steam as a non steam game or some other method to fake xinput.<br>
 If you want custom controller support use custom-controller-support-fix.zip
 <br><br>
+SM2002Fix-window-vsync-dx8to9.zip - This fix adds support so that you can toggle window mode and force vsync and more options some are explained later in the read me. <br><br>
+Spiderman2002Fix.zip - This fix is purely for FPS, Field of view and resolution <br><br>
 unfortunately the custom controller support will only work for those without the crashing on start up issue, if you have the crashing on start up issue you categorically must use start-up-crash-with-controller-fix.zip<br><br>
 the mapping for the custom controller support is as follows: 
 
