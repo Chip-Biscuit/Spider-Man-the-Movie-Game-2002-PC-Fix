@@ -21,7 +21,7 @@ We are aware of an issue with the games FMVs/Movies not scaling correctly and cu
 
 If you are experiencing a crashing issue with the FMVs/Movies then you may have to re name the folder in your games install location ‘Movies’ to a different name such as ‘Movies Broken’ so then the game plays without the movies at all whilst the crashing issue is being looked into.
 
-If you are experiencing crashing on start up issue make sure to download the start-up-crash-with-controller-fix.zip
+If you are experiencing crashing on start up issue make sure to download the start-up-crash-with-controller-fix.zip you will need to make sure to use an xinput controller or ds4 windows or add game to steam as non steam game.
 
 # Instructions
 Go to releases and download the fix that you wish to use for your specific use case, each one is detailed in the releases page. 
