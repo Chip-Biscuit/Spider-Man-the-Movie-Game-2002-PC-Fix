@@ -21,6 +21,8 @@ We are aware of an issue with the games FMVs/Movies not scaling correctly and cu
 
 If you are experiencing a crashing issue with the FMVs/Movies then you may have to re name the folder in your games install location ‘Movies’ to a different name such as ‘Movies Broken’ so then the game plays without the movies at all whilst the crashing issue is being looked into.
 
+If you are experiencing crashing on start up issue make sure to download the start-up-crash-with-controller-fix.zip
+
 # Instructions
 Go to releases and download the fix that you wish to use for your specific use case, each one is detailed in the releases page. 
 
@@ -32,9 +34,9 @@ I have also now spent some time writing a fully custom dinput8.dll which provide
 
 the mapping for the custom controller support is as follows: 
 
-<img width="2898" height="1693" alt="Spider-Man_2002_Xbox_Controller_Layout" src="https://github.com/user-attachments/assets/629632e4-34af-4193-aba6-bdce93e26cff" /><br>
+<img width="3291" height="1673" alt="Spider-Man_2002_Xbox_Controller_Layout" src="https://github.com/user-attachments/assets/316b24a5-6ef5-42a8-a88a-2a679368c571" /><br>
 
-<img width="678" height="834" alt="Spider-Man_2002_Controls_Table" src="https://github.com/user-attachments/assets/b902f502-e565-4db3-8f5b-c30da445c495" /><br>
+<img width="567" height="832" alt="Spider-Man_2002_Controls_Table" src="https://github.com/user-attachments/assets/8167413a-53df-4605-8315-569737d9ab52" /><br>
 
 for a more in depth look at the controls for the game : https://strategywiki.org/wiki/Spider-Man_(2002)/Controls
 
