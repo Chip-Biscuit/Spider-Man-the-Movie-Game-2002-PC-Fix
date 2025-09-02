@@ -22,11 +22,11 @@ We are aware of an issue with the games FMVs/Movies not scaling correctly and cu
 If you are experiencing a crashing issue with the FMVs/Movies then you may have to re name the folder in your games install location ‘Movies’ to a different name such as ‘Movies Broken’ so then the game plays without the movies at all whilst the crashing issue is being looked into.
 
 # Instructions
-Go to releases and download the latest spiderman2002fix. zip, extract the d3d8.dll and d3d8.ini files into your game folder next to the SpiderMan.exe file and you are good to go! You can edit the settings you wish to use in the d3d8.ini file.
+Go to releases and download the fix that you wish to use for your specific use case, each one is detailed in the releases page. 
 
 # Chip 
 
-I have spent some time reverse engineering an issue where the game was crashing on start up, this has now been traced to the cause which a dinput.dll has now been included into both fix's to address this so there should be no more start-up crash issues.
+I have spent some time reverse engineering an issue where the game was crashing on start up, this has now been traced to the cause which a dinput.dll has now been included into two fixes in the releases to address this so there should be no more start-up crash issues.
 
 I have also now spent some time writing a fully custom dinput8.dll which provides xinput support for the game this will work with xbox controllers, so if you dont have one you can use ds4 windows or add the game to steam as a non steam game or some other method to fake xinput.
 
@@ -56,6 +56,9 @@ If you have any issues, with the fixes then please go to discord for help linked
 Credits
 
 Credit to Elisha Riedlinger for the base wrapper and ThirteenAG.
+
+Samuel Grossman - xidi used to get controllers working 
+
 
 Brought to you by Fix Enhancers - https://fixenhancers.wixsite.com/fix-enhancers
 
