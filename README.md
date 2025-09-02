@@ -28,7 +28,7 @@ Go to releases and download the fix that you wish to use for your specific use c
 
 # Chip 
 
-I have spent some time reverse engineering an issue where the game was crashing on start up, this has now been traced to the cause which a dinput.dll has now been included into two fixes in the releases to address this so there should be no more start-up crash issues.
+I have spent some time reverse engineering an issue where the game was crashing on start up, this has now been traced to the cause which a dinput.dll has now been included into start-up-crash-with-controller-fix.zip in the releases to address this so there should be no more start-up crash issues.
 
 I have also now spent some time writing a fully custom dinput8.dll which provides xinput support for the game this will work with xbox controllers, so if you dont have one you can use ds4 windows or add the game to steam as a non steam game or some other method to fake xinput.<br>
 If you want custom controller support use custom-controller-support-fix.zip
