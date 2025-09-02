@@ -59,7 +59,7 @@ Credits
 
 Credit to Elisha Riedlinger for the base wrapper and ThirteenAG.
 
-Samuel Grossman - xidi used to get controllers working 
+Samuel Grossman - xidi used to get controllers working in start-up-crash-with-controller-fix.zip
 
 
 Brought to you by Fix Enhancers - https://fixenhancers.wixsite.com/fix-enhancers
