@@ -17,9 +17,14 @@ Watch the official fix guide video here on how to install the game and use the f
 For the fix to work properly you must have patched the game up to the 1.3 release, which also contains major bug fixes. If you have not done so already then you can download the patch from here - https://community.pcgamingwiki.com/files/file/791-spider-man-the-movie-patch-13/ 
 
 # Important Information
-We are aware of an issue with the games FMVs/Movies not scaling correctly and currently playing in a small box. This problem is being worked on but is a very complicated issue to resolve so will take time to fix properly. So please do keep an eye on future updates in the releases area for updated downloads of the fix where this issue may be fixed, however, for now please be patient regarding this issue, thank you!
+FMV's are now fixed you can toggle the fix for them in d3d8.ini under
+[FMV]
+Hook=1 
 
-If you are experiencing a crashing issue with the FMVs/Movies then you may have to re name the folder in your games install location ‘Movies’ to a different name such as ‘Movies Broken’ so then the game plays without the movies at all whilst the crashing issue is being looked into.
+this will simply turn fullscreen FMV fix on or off 1 is on my custom FMV fulscreen functionality 0 is off the original game FMV playback.<br>
+
+If you are experiencing a crashing issue with the FMVs/Movies then you may have to re name the folder in your games install location ‘Movies’ to a different name such as ‘Movies Broken’ so then the game plays without the movies at all.
+you can even do this if you just dont want FMV's to play just go into the movies folder and whichever movie you dont wish to play rename it.
 
 If you are experiencing crashing on start up issue make sure to download the start-up-crash-with-controller-fix.zip you will need to make sure to use an xinput controller or ds4 windows or add game to steam as non steam game.
 
@@ -30,7 +35,7 @@ Go to releases and download the fix that you wish to use for your specific use c
 
 I have spent some time reverse engineering an issue where the game was crashing on start up, this has now been traced to the cause which a dinput.dll has now been included into start-up-crash-with-controller-fix.zip in the releases to address this so there should be no more start-up crash issues.
 
-I have also now spent some time writing a fully custom dinput8.dll which provides xinput support for the game this will work with xbox controllers, so if you dont have one you can use ds4 windows or add the game to steam as a non steam game or some other method to fake xinput.<br>
+I have also now spent some time writing a fully custom dinput8.dll which provides xinput support for the game this will work with xbox controllers, you can tweek right stick sensitivitys in controllersupport.ini, so if you dont have one you can use ds4 windows or add the game to steam as a non steam game or some other method to fake xinput.<br>
 If you want custom controller support use custom-controller-support-fix.zip
 <br><br>
 SM2002Fix-window-vsync-dx8to9.zip - This fix adds support so that you can toggle window mode and force vsync and more options some are explained later in the read me in the releases section. <br><br>
