@@ -23,6 +23,8 @@ Hook=1
 
 this will simply turn fullscreen FMV fix on or off 1 is on my custom FMV fulscreen functionality 0 is off the original game FMV playback.<br>
 
+the first start up splash fmvs like activision and lti gray matter look a tiny bit glitchy i have no idea why but all the ingame cutscene fmvs seem to work absolutely superbly in fulscreen mode
+
 If you are experiencing a crashing issue with the FMVs/Movies then you may have to re name the folder in your games install location ‘Movies’ to a different name such as ‘Movies Broken’ so then the game plays without the movies at all.
 you can even do this if you just dont want FMV's to play just go into the movies folder and whichever movie you dont wish to play rename it.
 
@@ -34,6 +36,8 @@ Go to releases and download the fix that you wish to use for your specific use c
 ## Chip 
 
 I have spent some time reverse engineering an issue where the game was crashing on start up, this has now been traced to the cause which a dinput.dll has now been included into start-up-crash-with-controller-fix.zip in the releases to address this so there should be no more start-up crash issues.
+
+Also i have spent a huge ammount of time into FMV playback and im happy to say that they are now able to play in fullscreen!
 
 I have also now spent some time writing a fully custom dinput8.dll which provides xinput support for the game this will work with xbox controllers, you can tweek right stick sensitivitys in controllersupport.ini, so if you dont have one you can use ds4 windows or add the game to steam as a non steam game or some other method to fake xinput.<br>
 If you want custom controller support use custom-controller-support-fix.zip
