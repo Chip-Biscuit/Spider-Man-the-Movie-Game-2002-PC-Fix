@@ -17,7 +17,7 @@ Watch the official fix guide video here on how to install the game and use the f
 For the fix to work properly you must have patched the game up to the 1.3 release, which also contains major bug fixes. If you have not done so already then you can download the patch from here - https://community.pcgamingwiki.com/files/file/791-spider-man-the-movie-patch-13/ 
 
 # Important Information
-FMV's are now fixed you can toggle the fix for them in d3d8.ini under
+FMV's are now fixed you can toggle the fix for them in d3d8.ini under<br>
 [FMV]
 Hook=1 
 
