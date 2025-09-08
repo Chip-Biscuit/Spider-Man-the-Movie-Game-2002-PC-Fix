@@ -23,7 +23,7 @@ Hook=1
 
 this will simply turn fullscreen FMV fix on or off 1 is on my custom FMV fulscreen functionality 0 is off the original game FMV playback.<br>
 
-the first start up splash fmvs like activision and lti gray matter look a tiny bit glitchy i have no idea why but all the ingame cutscene fmvs seem to work absolutely superbly in fulscreen mode
+the first start up splash fmvs like activision and lti gray matter look a tiny bit glitchy but all the ingame cutscene fmvs seem to work absolutely superbly in fulscreen mode
 
 If you are experiencing a crashing issue with the FMVs/Movies then you may have to re name the folder in your games install location ‘Movies’ to a different name such as ‘Movies Broken’ so then the game plays without the movies at all.
 you can even do this if you just dont want FMV's to play just go into the movies folder and whichever movie you dont wish to play rename it.
