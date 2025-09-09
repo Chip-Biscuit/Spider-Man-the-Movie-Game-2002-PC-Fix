@@ -20,7 +20,7 @@ For the fix to work properly you must have patched the game up to the 1.3 releas
 FMV's are now fixed!!
 
 the first start up splash fmvs (activision) it can take a second to show fullscreen easiest thing to do is <br>
-Go to <path-to-game>\movies.<br>
+Go to *path-to-game*\movies.<br>
 Delete (make sure you back them up somewhere else) or rename ACTIVISN.bik, GrayMatr.bik, Origin1.bik and Treyarch.bik.
 
 If you are experiencing a crashing issue with the FMVs/Movies then you may have to re name the folder in your games install location ‘Movies’ to a different name such as ‘Movies Broken’ so then the game plays without the movies at all.
