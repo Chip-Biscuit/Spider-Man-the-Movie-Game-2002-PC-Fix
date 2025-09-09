@@ -16,8 +16,8 @@ Watch the official fix guide video here on how to install the game and use the f
 # Requirements before using fix
 For the fix to work properly you must have patched the game up to the 1.3 release, which also contains major bug fixes. If you have not done so already then you can download the patch from here - https://community.pcgamingwiki.com/files/file/791-spider-man-the-movie-patch-13/ 
 
-# Important Information
-FMV's are now fixed!!
+# Important Information <br>
+# FMV's are now fixed!!
 
 the first start up splash fmvs (activision) it can take a second to show fullscreen easiest thing to do is <br>
 Go to **path-to-game**\movies.<br>
