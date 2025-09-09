@@ -17,13 +17,11 @@ Watch the official fix guide video here on how to install the game and use the f
 For the fix to work properly you must have patched the game up to the 1.3 release, which also contains major bug fixes. If you have not done so already then you can download the patch from here - https://community.pcgamingwiki.com/files/file/791-spider-man-the-movie-patch-13/ 
 
 # Important Information
-FMV's are now fixed you can toggle the fix for them in d3d8.ini under<br>
-[FMV]
-Hook=1 
+FMV's are now fixed!!
 
-this will simply turn fullscreen FMV fix on or off 1 is on my custom FMV fulscreen functionality 0 is off the original game FMV playback.<br>
-
-the first start up splash fmvs like activision and lti gray matter look a tiny bit glitchy but all the ingame cutscene fmvs seem to work absolutely superbly in fulscreen mode
+the first start up splash fmvs (activision) it can take a second to show fullscreen easiest thing to do is <br>
+Go to <path-to-game>\movies.<br>
+Delete (make sure you back them up somewhere else) or rename ACTIVISN.bik, GrayMatr.bik, Origin1.bik and Treyarch.bik.
 
 If you are experiencing a crashing issue with the FMVs/Movies then you may have to re name the folder in your games install location ‘Movies’ to a different name such as ‘Movies Broken’ so then the game plays without the movies at all.
 you can even do this if you just dont want FMV's to play just go into the movies folder and whichever movie you dont wish to play rename it.
