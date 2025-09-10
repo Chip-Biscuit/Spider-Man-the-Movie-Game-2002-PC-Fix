@@ -19,6 +19,8 @@ For the fix to work properly you must have patched the game up to the 1.3 releas
 # Important Information <br>
 # FMV's are now fixed!!
 
+There is settings in d3d8.ini to do with FMVS you can play around with im still working on FMVs at the moment so there could be updates, any bugs please report in the discord server.
+
 If you dont want intro movies to play and get straight into the game then:<br>
 Go to **path-to-game**\movies. Delete (make sure you back them up somewhere else) or rename ***ACTIVISN.bik***, ***GrayMatr.bik, Origin1.bik and Treyarch.bik***.
 
