@@ -19,9 +19,9 @@ For the fix to work properly you must have patched the game up to the 1.3 releas
 # Important Information <br>
 # FMV's are now fixed!!
 
-All Releases now come with two folders inside 4K and 1080p this is for the FMVS fullscreen fix, the fmv fullscreen fix has been tested on 1080p resolution, 4k resolution and steam deck using the 1080p folder and setting resolution in d3d8.ini 
-other than those tested resolutions others are not guaranteed to work so you will have to try it on other resolutions and see for yourself but the basic rule is 
-1080p and ***under*** use 1080p fix folder 
+All Releases now come with two folders inside 4K and 1080p this is for the FMVS fullscreen fix, the fmv fullscreen fix has been tested on 1080p resolution, 4k resolution and steam deck using the 1080p folder and setting resolution in d3d8.ini <br><br>
+other than those tested resolutions others are not guaranteed to work so you will have to try it on other resolutions and see for yourself but the basic rule is <br><br>
+1080p and ***under*** use 1080p fix folder <br><br>
 1080p and ***over*** use 4K fix file
 
 If you dont want intro movies to play and get straight into the game then:<br>
