@@ -49,9 +49,10 @@ Spiderman2002Fix.zip - This fix is purely for FPS, Field of view and resolution 
 unfortunately the custom controller support will only work for those without the crashing on start up issue, if you have the crashing on start up issue you categorically must use start-up-crash-with-controller-fix.zip<br><br>
 the mapping for the custom controller support is as follows: 
 
-<img width="3291" height="1673" alt="Spider-Man_2002_Xbox_Controller_Layout" src="https://github.com/user-attachments/assets/316b24a5-6ef5-42a8-a88a-2a679368c571" /><br>
 
-<img width="567" height="832" alt="Spider-Man_2002_Controls_Table" src="https://github.com/user-attachments/assets/8167413a-53df-4605-8315-569737d9ab52" /><br>
+<img width="3297" height="1661" alt="Spider-Man_2002_Xbox_Controller_Layout" src="https://github.com/user-attachments/assets/61d1e1eb-8a3f-4dda-a0fd-94b62bfa1253" /><br>
+
+<img width="1220" height="1617" alt="Spider-Man_2002_Controls_Table" src="https://github.com/user-attachments/assets/83d00e7c-816f-4cfa-b8f1-76e870c68814" /><br>
 
 for a more in depth look at the controls for the game : https://strategywiki.org/wiki/Spider-Man_(2002)/Controls
 
