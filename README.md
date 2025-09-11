@@ -23,7 +23,7 @@ All Releases now come with two folders inside 4K and 1080p this is for the FMVS 
 other than those tested resolutions others are not guaranteed to work so you will have to try it on other resolutions and see for yourself but the basic rule is <br><br>
 1080p and ***under*** use 1080p fix folder <br><br>
 1080p and ***over*** use 4K fix file
-
+<br><br> however you may have to play around with this<br><br>
 If you dont want intro movies to play and get straight into the game then:<br>
 Go to **path-to-game**\movies. Delete (make sure you back them up somewhere else) or rename ***ACTIVISN.bik***, ***GrayMatr.bik, Origin1.bik and Treyarch.bik***.
 
