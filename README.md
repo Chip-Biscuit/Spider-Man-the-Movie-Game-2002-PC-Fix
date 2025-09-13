@@ -32,7 +32,8 @@ Go to releases and download the latest Spider-Man 2002 fix (that is correct for 
 <br>
 Please bare in mind that if you have the start up crash issue then you can’t use the custom x-input controller addition due to compatibility issues in order to fix that crash problem, so you must use start-up-crash-with-controller to be able to use the games original controller d-input support.
 <br>
-Once you have downloaded the correct fix for you extract the files into your games main install folder next to the  **SpiderMan.exe**  file and you are good to go! You can edit the settings you wish to use in the various ini files.
+Once you have downloaded the correct fix for you extract the files into your games main install folder next to the
+ **SpiderMan.exe**  file and you are good to go! You can edit the settings you wish to use in the various ini files.
 <br><br>
 
 # FMVS
@@ -57,7 +58,7 @@ If you don’t want intro movies to play and get straight into the game then:
 <br> 
 -    **ACTIVISN.bik**
 -    **GrayMatr.bik**
--   ** Origin1.bik**
+-    **Origin1.bik**
 -    **Treyarch.bik**
 <br> 
 If you are experiencing a crashing issue with the FMVS/Movies, then you may have to rename the folder in your games install location ‘Movies’ to a different name such as ‘Movies Broken’ so then the game plays without the FMVS/movies at all.
