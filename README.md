@@ -64,7 +64,7 @@ If you are experiencing a crashing issue with the FMVS/Movies, then you may have
 <br><br>
 
 # Resolution/Aspect Ratio
-<a id="resolution"></a>
+(#resolution)
 
 Choose the resolution you wish to use in the **d3d8.ini** file by writing the Width and Height for your specific resolution. Aspect Ratio is automatically calculated.
 <br><br>
