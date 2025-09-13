@@ -74,12 +74,12 @@ To choose your FOV edit it in the **d3d8.ini** file There are 4 different option
 # FPS
 
 The default for FPS is (60) you can change it as you wish in the **dxwrapper.ini** file under the option **OverrideRefreshRate**. It is also recommended that you leave both v-sync options on by default.
-<br><br>
+<br><br> <a id="controller"></a>
 # Controller Support (X-Input)
 
 **Chip** has also now spent some time writing a fully custom dinput8.dll which provides x-input support for the game. This will work with Xbox controllers; you can tweak right stick sensitivity in controllersupport.ini. If you don’t have an Xbox controller and use PlayStation, you can use DS4/5 or add the game to Steam as a non Steam game.
 <br>
-If you want custom controller support use **custom-controller-support-fix.zip.** <a id="controller"></a>
+If you want custom controller support use **custom-controller-support-fix.zip.** 
 <br>
 Custom controller support will only work for those without the crashing on start up issue, if you have the crashing on start up, you must use **start-up-crash-with-controller-fix.zip.**
 <br>
