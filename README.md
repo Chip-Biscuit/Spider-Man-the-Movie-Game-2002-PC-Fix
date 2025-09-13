@@ -1,7 +1,8 @@
 ![DX Version](https://img.shields.io/badge/DirectX-8/9-informational)
 ![Platform](https://img.shields.io/badge/Windows-x86-blue)
 ![Config](https://img.shields.io/badge/Config-INI-success)
-![PCGamingWiki – Essential fix](https://img.shields.io/badge/PCGamingWiki-Essential%20fix-0066cc?style=for-the-badge)(https://www.pcgamingwiki.com/wiki/Spider-Man_(2002))
+[![PCGamingWiki – Essential fix](https://img.shields.io/badge/PCGamingWiki-Essential%20fix-0066cc?style=flat&logo=pcgamingwiki&logoColor=white)](https://www.pcgamingwiki.com/wiki/Spider-Man_(2002))
+
 
 
 
