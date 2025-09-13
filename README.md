@@ -64,10 +64,9 @@ If you are experiencing a crashing issue with the FMVS/Movies, then you may have
 <br><br>
 
 # Resolution/Aspect Ratio
-(#resolution)
 
 Choose the resolution you wish to use in the **d3d8.ini** file by writing the Width and Height for your specific resolution. Aspect Ratio is automatically calculated.
-<br><br>
+<br><br> <a id="resolution"></a>
 # FOV
 
 To choose your FOV edit it in the **d3d8.ini** file There are 4 different options to choose from (1), (2), (3) and (4) with each one zooming out the FOV more each time. It’s advised to not go above (2) if you do not wish to see any objects popping in and out of view in open city levels. If you don’t wish to use any FOV and stick with original, you can just set this to (0).
