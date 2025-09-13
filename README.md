@@ -1,10 +1,10 @@
 [![DX Version](https://img.shields.io/badge/DirectX-8/9-informational)](#features)
 [![Platform](https://img.shields.io/badge/Windows-x86-blue)](#features)
 [![Config](https://img.shields.io/badge/Config-INI-success)](#features)
-[![Resolution](https://img.shields.io/badge/Resolution-1080p–4K%2B-brightgreen?style=flat)](#features)
+[![Resolution](https://img.shields.io/badge/Resolution-1080p–4K%2B-brightgreen?style=flat)](#resolution)
 [![FOV](https://img.shields.io/badge/FOV-Configurable-blue?style=flat)](#fov)
-[![Controller](https://img.shields.io/badge/Controller-PS2--style%20XInput-orange?style=flat)](#features)
-[![FMV](https://img.shields.io/badge/FMV-Fullscreen%20Fix-purple?style=flat)](#features)
+[![Controller](https://img.shields.io/badge/Controller-PS2--style%20XInput-orange?style=flat)](#controller)
+[![FMV](https://img.shields.io/badge/FMV-Fullscreen%20Fix-purple?style=flat)](#fmvs)
 [![PCGamingWiki – Essential fix](https://img.shields.io/badge/PCGamingWiki-Essential%20fix-0066cc?style=flat&logo=pcgamingwiki&logoColor=white)](https://www.pcgamingwiki.com/wiki/Spider-Man_(2002))
 
 
@@ -31,7 +31,7 @@ For the fix to work properly you must have patched the game up to the 1.3 releas
 
 # Important Information <br>
 # FMV's are now fixed!!
-
+(#fmvs)
 All Releases now come with two folders inside 4K and 1080p this is for the FMVS fullscreen fix, the fmv fullscreen fix has been tested on 1080p resolution, 4k resolution and steam deck using the 1080p folder and setting resolution in d3d8.ini <br><br>
 other than those tested resolutions others are not guaranteed to work so you will have to try it on other resolutions and see for yourself but the basic rule is <br><br>
 1080p and ***under*** use 1080p fix folder <br><br>
@@ -61,7 +61,7 @@ SM2002Fix-window-vsync-dx8to9.zip - This fix adds support so that you can toggle
 Spiderman2002Fix.zip - This fix is purely for FPS, Field of view and resolution <br><br>
 unfortunately the custom controller support will only work for those without the crashing on start up issue, if you have the crashing on start up issue you categorically must use start-up-crash-with-controller-fix.zip<br><br>
 the mapping for the custom controller support is as follows: 
-
+(#controller)
 
 <img width="3297" height="1661" alt="Spider-Man_2002_Xbox_Controller_Layout" src="https://github.com/user-attachments/assets/61d1e1eb-8a3f-4dda-a0fd-94b62bfa1253" /><br>
 
@@ -70,6 +70,7 @@ the mapping for the custom controller support is as follows:
 for a more in depth look at the controls for the game : https://strategywiki.org/wiki/Spider-Man_(2002)/Controls
 
 # Resolution
+(#resolution)
 The default for resolution is 1920x1080 you can enter any width/ height you desire in d3d8.ini
 
 # FPS
