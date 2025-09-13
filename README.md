@@ -2,7 +2,7 @@
 [![Platform](https://img.shields.io/badge/Windows-x86-blue)](#features)
 [![Config](https://img.shields.io/badge/Config-INI-success)](#features)
 [![Resolution](https://img.shields.io/badge/Resolution-1080p–4K%2B-brightgreen?style=flat)](#features)
-[![FOV](https://img.shields.io/badge/FOV-Configurable-blue?style=flat)](#features)
+[![FOV](https://img.shields.io/badge/FOV-Configurable-blue?style=flat)](#fov)
 [![Controller](https://img.shields.io/badge/Controller-PS2--style%20XInput-orange?style=flat)](#features)
 [![FMV](https://img.shields.io/badge/FMV-Fullscreen%20Fix-purple?style=flat)](#features)
 [![PCGamingWiki – Essential fix](https://img.shields.io/badge/PCGamingWiki-Essential%20fix-0066cc?style=flat&logo=pcgamingwiki&logoColor=white)](https://www.pcgamingwiki.com/wiki/Spider-Man_(2002))
@@ -76,6 +76,7 @@ The default for resolution is 1920x1080 you can enter any width/ height you desi
 The default for FPS is (60) you can change it as you wish or fully uncap it with (0) with the FPSLimit option in the d3d8.ini file.
 
 # FOV
+(#fov)
 The default for FOV is (0) which is the original games FOV. You can choose either 1,2,3 or 4 in the d3d8.ini file and each option will increase the FOV in game.
 
 # Vote to see the game return via GOG Dreamlist
