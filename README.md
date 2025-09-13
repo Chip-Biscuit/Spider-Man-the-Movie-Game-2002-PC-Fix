@@ -1,6 +1,7 @@
 ![DX Version](https://img.shields.io/badge/DirectX-8/9-informational)
 ![Platform](https://img.shields.io/badge/Windows-x86-blue)
 ![Config](https://img.shields.io/badge/Config-INI-success)
+[![PCGamingWiki – Essential fix](https://img.shields.io/badge/PCGamingWiki-Essential%20fix-0066cc)](<link-to-that-game-on-PCGW>)
 
 
 
