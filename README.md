@@ -84,6 +84,12 @@ If you want custom controller support use **custom-controller-support-fix.zip.**
 Custom controller support will only work for those without the crashing on start up issue, if you have the crashing on start up, you must use **start-up-crash-with-controller-fix.zip.**
 <br>
 The mapping for the custom controller support is as follows: 
+
+<img width="3297" height="1661" alt="Spider-Man_2002_Xbox_Controller_Layout" src="https://github.com/user-attachments/assets/7af8acee-a991-4bcf-8d25-1eef85700da6" />
+
+<img width="1220" height="1617" alt="Spider-Man_2002_Controls_Table" src="https://github.com/user-attachments/assets/a9a75aa7-0e8f-456a-ba31-5a2c8ba02bc3" />
+
+
 <br>
 for a more in depth look at the controls for the game 
 <a href=" https://strategywiki.org/wiki/Spider-Man_(2002)/Controls
