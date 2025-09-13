@@ -71,7 +71,7 @@ Choose the resolution you wish to use in the **d3d8.ini** file by writing the Wi
 # FOV
 
 To choose your FOV edit it in the **d3d8.ini** file There are 4 different options to choose from (1), (2), (3) and (4) with each one zooming out the FOV more each time. It’s advised to not go above (2) if you do not wish to see any objects popping in and out of view in open city levels. If you don’t wish to use any FOV and stick with original, you can just set this to (0).
-<br><br>
+<br><br> <a id="fov"></a>
 # FPS
 
 The default for FPS is (60) you can change it as you wish in the **dxwrapper.ini** file under the option **OverrideRefreshRate**. It is also recommended that you leave both v-sync options on by default.
