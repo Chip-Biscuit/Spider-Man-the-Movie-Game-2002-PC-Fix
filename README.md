@@ -45,7 +45,7 @@ The FMV fullscreen fix has been tested on 1080p, 4K resolutions. This is also te
 <br>
 4K and 1080p are the only tested Resolutions any others are not guaranteed to work. You will have to try other resolutions and see for yourself if they work properly. The basic rule is: 
 <br>
-1080p and under use 1080p fix folder 
+1080p and under use 1080p fix folder <a id="fmvs"></a>
 <br>
 Anything above 1080p use the 4K fix file
  <br>
@@ -61,12 +61,12 @@ If you don’t want intro movies to play and get straight into the game then:
 -    **Treyarch.bik**
 <br> 
 If you are experiencing a crashing issue with the FMVS/Movies, then you may have to rename the folder in your games install location ‘Movies’ to a different name such as ‘Movies Broken’ so then the game plays without the FMVS/movies at all.
-<br><br>
+<br><br> <a id="resolution"></a>
 
 # Resolution/Aspect Ratio
 
 Choose the resolution you wish to use in the **d3d8.ini** file by writing the Width and Height for your specific resolution. Aspect Ratio is automatically calculated.
-<br><br> <a id="resolution"></a>
+<br><br>
 # FOV
 
 To choose your FOV edit it in the **d3d8.ini** file There are 4 different options to choose from (1), (2), (3) and (4) with each one zooming out the FOV more each time. It’s advised to not go above (2) if you do not wish to see any objects popping in and out of view in open city levels. If you don’t wish to use any FOV and stick with original, you can just set this to (0).
