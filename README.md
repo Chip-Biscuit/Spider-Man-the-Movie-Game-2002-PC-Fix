@@ -1,6 +1,6 @@
-[![DX Version](https://img.shields.io/badge/DirectX-8/9-informational)]
-[![Platform](https://img.shields.io/badge/Windows-x86-blue)]
-[![Config](https://img.shields.io/badge/Config-INI-success)] 
+[![DX Version](https://img.shields.io/badge/DirectX-8/9-informational)](#f)
+[![Platform](https://img.shields.io/badge/Windows-x86-blue)](#f)
+[![Config](https://img.shields.io/badge/Config-INI-success)](#f)
 [![Resolution](https://img.shields.io/badge/Resolution-1080p–4K%2B-brightgreen?style=flat)](#resolution)
 [![FOV](https://img.shields.io/badge/FOV-Configurable-blue?style=flat)](#fov)
 [![Controller](https://img.shields.io/badge/Controller-PS2--style%20XInput-orange?style=flat)](#controller)
