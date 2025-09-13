@@ -92,7 +92,7 @@ The mapping for the custom controller support is as follows:
 
 <br>
 for a more in depth look at the controls for the game 
-<a href=" https://strategywiki.org/wiki/Spider-Man_(2002)/Controls
+https://strategywiki.org/wiki/Spider-Man_(2002)/Controls
 <br><br>
 # Vote to see the game return via GOG Dreamlist
 
