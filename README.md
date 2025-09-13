@@ -4,7 +4,7 @@
 [![Resolution](https://img.shields.io/badge/Resolution-1080p–4K%2B-brightgreen?style=flat)](#features)
 [![FOV](https://img.shields.io/badge/FOV-Configurable-blue?style=flat)](#features)
 [![Controller](https://img.shields.io/badge/Controller-PS2--style%20XInput-orange?style=flat)](#features)
-[![FMV](https://img.shields.io/badge/FMV-Fullscreen%20%2F%20Jitter%20Fix-purple?style=flat)](#features)
+[![FMV](https://img.shields.io/badge/FMV-Fullscreen%20Fix-purple?style=flat)](#features)
 [![PCGamingWiki – Essential fix](https://img.shields.io/badge/PCGamingWiki-Essential%20fix-0066cc?style=flat&logo=pcgamingwiki&logoColor=white)](https://www.pcgamingwiki.com/wiki/Spider-Man_(2002))
 
 
