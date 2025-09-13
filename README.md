@@ -1,3 +1,9 @@
+![DX Version](https://img.shields.io/badge/DirectX-8/9-informational)
+![Platform](https://img.shields.io/badge/Windows-x86-blue)
+![Config](https://img.shields.io/badge/Config-INI-success)
+
+
+
 # Spider-Man-the-Movie-Game-(2002)-PC-Fix
 
 ![sm2002](https://github.com/user-attachments/assets/096f330c-4ca2-4245-bd8b-5eeb871d2bdd)
