@@ -27,11 +27,11 @@ Watch the official fix guide video here on how to install the game and use the f
 
 
 # Requirements before using fix
+(#fmvs)
 For the fix to work properly you must have patched the game up to the 1.3 release, which also contains major bug fixes. If you have not done so already then you can download the patch from here - https://community.pcgamingwiki.com/files/file/791-spider-man-the-movie-patch-13/ 
 
 # Important Information <br>
 # FMV's are now fixed!!
-(#fmvs)
 All Releases now come with two folders inside 4K and 1080p this is for the FMVS fullscreen fix, the fmv fullscreen fix has been tested on 1080p resolution, 4k resolution and steam deck using the 1080p folder and setting resolution in d3d8.ini <br><br>
 other than those tested resolutions others are not guaranteed to work so you will have to try it on other resolutions and see for yourself but the basic rule is <br><br>
 1080p and ***under*** use 1080p fix folder <br><br>
