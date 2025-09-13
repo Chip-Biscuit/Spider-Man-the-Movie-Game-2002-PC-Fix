@@ -79,11 +79,11 @@ The default for FPS is (60) you can change it as you wish in the **dxwrapper.ini
 
 **Chip** has also now spent some time writing a fully custom dinput8.dll which provides x-input support for the game. This will work with Xbox controllers; you can tweak right stick sensitivity in controllersupport.ini. If you don’t have an Xbox controller and use PlayStation, you can use DS4/5 or add the game to Steam as a non Steam game.
 <br>
-If you want custom controller support use **custom-controller-support-fix.zip.**
+If you want custom controller support use **custom-controller-support-fix.zip.** <a id="controller"></a>
 <br>
 Custom controller support will only work for those without the crashing on start up issue, if you have the crashing on start up, you must use **start-up-crash-with-controller-fix.zip.**
 <br>
-The mapping for the custom controller support is as follows: <a id="controller"></a>
+The mapping for the custom controller support is as follows: 
 <br>
 for a more in depth look at the controls for the game 
 <a href=" https://strategywiki.org/wiki/Spider-Man_(2002)/Controls
