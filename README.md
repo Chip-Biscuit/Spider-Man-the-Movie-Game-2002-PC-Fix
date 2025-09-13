@@ -107,7 +107,7 @@ If you have any** issues**, with the fixes then please go to **Discord** for hel
 Credit to Elisha Riedlinger for the base wrapper and ThirteenAG.
 Samuel Grossman - xidi used to get controllers working in start-up-crash-with-controller-fix.zip
 Brought to you by **Fix Enhancers**
-<a href=" https://fixenhancers.wixsite.com/fix-enhancers
+https://fixenhancers.wixsite.com/fix-enhancers
 <br><br>
 # Team Fix Enhancers:
 
