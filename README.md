@@ -99,7 +99,7 @@ https://strategywiki.org/wiki/Spider-Man_(2002)/Controls
 # Vote to see the game return via GOG Dreamlist
 
 If you are interested in potentially seeing this game easily available to purchase and use today then go and vote on the games **GOG Dreamlist** to help make this become a reality, you can vote for the game here and write a message about the game if you wish 
-<a href=" https://www.gog.com/dreamlist/game/spider-man-2002 
+https://www.gog.com/dreamlist/game/spider-man-2002 
 <br><br>
 # Issues/Problems
 
