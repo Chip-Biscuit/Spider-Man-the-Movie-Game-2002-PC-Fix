@@ -5,7 +5,7 @@
 [![FOV](https://img.shields.io/badge/FOV-Configurable-blue?style=flat)](#fov)
 [![Controller](https://img.shields.io/badge/Controller-PS2--style%20XInput-orange?style=flat)](#controller)
 [![FMV](https://img.shields.io/badge/FMV-Fullscreen%20Fix-purple?style=flat)](#fmvs)
-[![FMV](https://img.shields.io/badge/FMV-Fullscreen%20Fix-red?style=flat)](#enhanced-game-icon)
+[![FMV](https://img.shields.io/badge/Icon-%20Enhancement-FF0000?style=flat)](#enhanced-game-icon)
 [![PCGamingWiki – Essential improvements](https://img.shields.io/badge/PCGamingWiki-Essential%20improvements-0066cc?style=flat&logo=pcgamingwiki&logoColor=white)](https://www.pcgamingwiki.com/wiki/Spider-Man_(2002))
 
 <br><br>
