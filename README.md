@@ -52,7 +52,9 @@ You can find more of XanderNT's awesome work here:
 
 https://linktr.ee/XanderNT
 
-![SM2002ICO](https://github.com/user-attachments/assets/0b08db03-e0b6-45ac-867d-ae66d71279d3)
+<a href="https://linktr.ee/XanderNT" target="_blank" rel="noopener noreferrer">
+  <img src="https://github.com/user-attachments/assets/0b08db03-e0b6-45ac-867d-ae66d71279d3" alt="SM2002ICO" width="180" />
+</a>
 
 # FMVS
 
