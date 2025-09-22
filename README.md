@@ -17,13 +17,19 @@ Watch the official fix guide video here on how to install the game and use the f
  <img src="https://github.com/user-attachments/assets/3ee16d42-5348-4947-8ce5-7d37d4d26372" alt="Spiderman 2002" width="480" height="360"> </a><br> 
 ###### <i>Click the image above to watch the video</i>
 <br><br>
+
 # Requirements before using fix
+
 For the fix to work properly you must have patched the game up to the **1.3 release**, which also contains major bug fixes. If you have not done so already then you can download the patch from here https://community.pcgamingwiki.com/files/file/791-spider-man-the-movie-patch-13/ 
 <br><br>
+
 # Important Information
+
 **Chip** has spent some time reverse engineering an issue where the game was crashing on start up, this has now been traced to the cause and a dinput.dll has now been included into start-up-crash-with-controller-fix.zip in releases to address this so there should be no more start-up crash issues.
 <br><br>
+
 # Instructions
+
 Go to releases and download the latest Spider-Man 2002 fix (that is correct for you) of either: 
 -    **custom-controller-support-fix-zip**
 -    **SM2002Fix-window-vsync-dx8to9.zip**
@@ -35,6 +41,18 @@ Please bare in mind that if you have the start up crash issue then you can’t u
 Once you have downloaded the correct fix for you extract the files into your games main install folder next to the
  **SpiderMan.exe**  file and you are good to go! You can edit the settings you wish to use in the various ini files.
 <br><br>
+
+# Enhanced game Icon
+
+Included in the all of the fixes is now the awesome re worked game icon in the folder Enhanced Game Icon by - XanderNT
+
+You can change the games icon by right clicking the shortcut on the desktop or wherever you have the game short cut then go to properties change icon and change it to the new SM2002ICO.ico.
+
+You can find more of XanderNT's awesome work here: 
+
+https://linktr.ee/XanderNT
+
+![SM2002ICO](https://github.com/user-attachments/assets/0b08db03-e0b6-45ac-867d-ae66d71279d3)
 
 # FMVS
 
