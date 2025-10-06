@@ -15,7 +15,7 @@
 # Official video guide,
 Watch the official fix guide video here on how to install the game and use the fix 
 <a href="https://www.youtube.com/watch?v=BVLAuS9X9Ic">
- <img src="Spider-Man_2002_Fix_Guide" src="https://github.com/user-attachments/assets/ba86d6f5-9180-4cde-8f86-be181cf6aaff"> </a><br> 
+ <img src="https://github.com/user-attachments/assets/ba86d6f5-9180-4cde-8f86-be181cf6aaff"> </a><br> 
 ###### <i>Click the image above to watch the video</i>
 <br><br>
 
