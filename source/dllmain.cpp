@@ -15,31 +15,34 @@
 */
 // Chip spiderman 2002 patches + fullscreen Bink overlay (CopyToBuffer path)
 
+#define NOMINMAX
 #include "d3d8.h"
 #include <d3dx8.h>
 #include "iathook.h"
 #include "helpers.h"
-#include <string>
-#include <cstdio>
 
 #include <windows.h>
-#include <iostream>
-#include <vector>
-#include <list>
-#include <algorithm>
-#include <cstdarg>
-#include <cstdint>
-
 #include <Psapi.h>
 #include <Xinput.h>
 #include <imagehlp.h>
 #include <tlhelp32.h>
+
+#include <algorithm>
+#include <cstdint>
+#include <cstdarg>
+#include <cstdio>
+#include <iostream>
+#include <list>
+#include <string>
+#include <vector>
+#include "CharacterSwap.h"
 
 #pragma comment(lib, "imagehlp.lib")
 #pragma comment(lib, "Xinput9_1_0.lib")
 #pragma comment(lib, "d3dx8.lib")
 #pragma comment(lib, "legacy_stdio_definitions.lib")
 #pragma comment(lib, "winmm.lib")
+#pragma comment(lib, "libMinHook-x86.lib")
 
 // Debug macros
 #define DX_PRINT(x)   do { std::cout << x << std::endl; } while(0)
@@ -69,48 +72,79 @@ HMODULE g_hWrapperModule = NULL;
 HMODULE d3d8dll = NULL;
 
 bool  bForceWindowedMode = 0;
-bool  bDirect3D8DisableMaximizedWindowedModeShim;
-bool  bUsePrimaryMonitor;
-bool  bCenterWindow;
-bool  bBorderlessFullscreen;
-bool  bAlwaysOnTop;
-bool  bDoNotNotifyOnTaskSwitch;
-bool  bDisplayFPSCounter;
-bool  bCustomControllerSuppport;
-float fFPSLimit;
-int   nFullScreenRefreshRateInHz;
+bool  bDirect3D8DisableMaximizedWindowedModeShim = 0;
+bool  bUsePrimaryMonitor = 0;
+bool  bCenterWindow = 0;
+bool  bBorderlessFullscreen = 0;
+bool  bAlwaysOnTop = 0;
+bool  bDoNotNotifyOnTaskSwitch = 0;
+bool  bDisplayFPSCounter = 0;
+bool  bCustomControllerSuppport = 0;
+float fFPSLimit = 0.0f;
+int   nFullScreenRefreshRateInHz = 0;
 
-char WinDir[MAX_PATH + 1];
+char WinDir[MAX_PATH + 1] = { 0 };
 
 // record render target size (CreateDevice/Reset update this)
 static UINT gTargetW = 0, gTargetH = 0;
 
-// MOVIE_SIZE from INI (hard size for overlay draw)
+// --- FMV user/ini toggles (some are locked by constants below) ---
+static bool  gFmvHookEnabled = true;
+static bool  gMovieStretch = false;
+static bool  gKeepAspect = true;
+static bool  gDetectCrop = true;
+static bool  gForceFullWindowPresent = true;
+static int   gUploadEveryN = 1;
+static bool  gFmvDebug = false;
+static int   gMovieOffsetX = 0;
+static int   gMovieOffsetY = 0;
+
+// --- HARD-LOCKED FMV SETTINGS ---
+//static constexpr bool kFmvStretch = true;                 // fill whole screen
+//static constexpr bool kFmvKeepAspect = false;             // (ignored when Stretch=true)
+//static constexpr bool kFmvDetectCrop = true;              // scan black bars if needed
+//static constexpr int  kFmvUploadEveryN = 2;               // upload cadence gate
+//static constexpr bool kFmvForceFullWindowPresent = false; // don't force full-window present
+//static constexpr bool kFmvDebug = false;                  // no debug spam
+//static constexpr int  kMovieOffsetX = 0;
+//static constexpr int  kMovieOffsetY = 0;
+
+// --- HARD-LOCKED CHOICES ---
+static constexpr bool kHardDetectCrop = true;              // DetectCrop = 1
+static constexpr bool kHardForceFullWindowPresent = true; // ForceFullWindowPresent = 0
+static constexpr bool kHardDebug = false; // always off
+
+// --- INI-DRIVEN FMV SETTINGS (defaults preserve old hard-coded behaviour) ---
+static bool gCfgFmvStretch = true;   // [FMV] Stretch
+static bool gCfgFmvKeepAspect = false;  // [FMV] KeepAspect (ignored if Stretch=1)
+//static bool gCfgFmvDetectCrop = true;   // [FMV] DetectCrop
+static int  gCfgFmvUploadEveryN = 2;      // [FMV] UploadEveryN
+//static bool gCfgFmvForceFullWindowPresent = false;  // [FMV] ForceFullWindowPresent
+//static bool gCfgFmvDebug = false;  // [FMV] Debug
+
+// Position offsets (kept for compatibility, also exposed under [MOVIE_SIZE])
+static int  gCfgMovieOffsetX = 0;      // [MOVIE_SIZE] OffsetX
+static int  gCfgMovieOffsetY = 0;      // [MOVIE_SIZE] OffsetY
+
+// ---- Runtime flags for FMV upload throttling ----
+static bool     gOverlayDirty = false;  // set when a new frame is captured
+static unsigned s_uploadGate = 0;
+
+UINT gOverlayActiveFrames = 0;
+bool gOverlayDrawnThisFrame = false;
+
+// Optional fixed movie size (unused by default, kept for compatibility)
 static unsigned gMovieW = 0;
 static unsigned gMovieH = 0;
 
-// ---- Bink logging helper: send to debugger AND the game's stdout log
-static void BinkLogf(const char* fmt, ...)
-{
-    char line[1024];
-    va_list args;
-    va_start(args, fmt);
-    _vsnprintf(line, sizeof(line) - 1, fmt, args);
-    va_end(args);
-    line[sizeof(line) - 1] = '\0';
+// --- NEW: precise crop hints from the Bink calls ---
+static bool gHasRectHint = false;          // true if we’ve seen CopyToBufferRect this session
+static UINT gHintX = 0, gHintY = 0;        // where the game places the movie in the dest buffer
+static UINT gHintW = 0, gHintH = 0;        // movie size (from Rect variant when available)
 
-    char msg[1200];
-    _snprintf(msg, sizeof(msg) - 1, "[BINK] %s", line);
-    msg[sizeof(msg) - 1] = '\0';
-
-    OutputDebugStringA(msg);
-    OutputDebugStringA("\n");
-    std::cout << msg << std::endl;
-    std::cout.flush();
-}
 
 // ============================================================================
-// BINK OVERLAY (CopyToBuffer hook + fullscreen draw in EndScene)
+// BINK OVERLAY (CopyToBuffer hook + fullscreen draw) — STABILIZED + LOCK MODE
 // ============================================================================
 
 typedef int(__stdcall* PFN_BinkCopyToBuffer)(
@@ -127,6 +161,7 @@ typedef int(__stdcall* PFN_BinkCopyToBufferRect)(
     void* binkHandle, void* dest, int destpitch, int destheight, int destx, int desty,
     unsigned int flags, unsigned int srcx, unsigned int srcy, unsigned int srcw, unsigned int srch);
 
+// Real functions (populated by IAT patch)
 static PFN_BinkCopyToBuffer      gReal_BinkCopyToBuffer = nullptr;
 static PFN_BinkCopyToBufferRect  gReal_BinkCopyToBufferRect = nullptr;
 
@@ -135,15 +170,38 @@ static std::vector<unsigned char> gOverlayFrame;
 static UINT  gSrcW = 0, gSrcH = 0;
 static UINT  gSrcPitch = 0;
 static UINT  gSrcBpp = 0;              // 2 or 4 bytes/pixel (heuristic)
-UINT gOverlayActiveFrames = 0; // draw N frames after last capture
 
 // D3D overlay resources
 static IDirect3DTexture8* gOverlayTex = nullptr;
 static UINT               gOverlayTexW = 0;
 static UINT               gOverlayTexH = 0;
 
-static UINT gCropX = 0, gCropY = 0, gCropW = 0, gCropH = 0;
+// --- Stabilized crop state ---------------------------------------------------
+struct CropBox { float x = 0, y = 0, w = 0, h = 0; };
+static CropBox gDetected;     // raw detection (this upload)
+static CropBox gStable;       // smoothed/locked crop used for drawing
+static CropBox gPrevStable;   // previous stable for motion calc
 
+// Stabilizer params (tweak if needed)
+static const int   kMinCropSizePx = 48;      // reject tiny boxes
+static const int   kPadPx = 2;       // expand accepted crop by small safety pad
+static const float kMoveHysteresisPx = 3.0f;    // ignore small center shifts
+static const float kSizeHysteresisPx = 4.0f;    // ignore tiny size changes
+static const int   kLockFramesAfterAccept = 6;       // freeze a few frames after accepting change
+static const float kEmaAlpha = 0.35f;   // smoothing factor for accepted moves
+static const float kMinNonBlackCoverage = 0.006f;  // <0.6% non-black => “too dark”, freeze
+static const float kBlackThresholdBgrSum = 16.0f;   // B+G+R <= threshold => treat as black
+static const int   kDownsampleStride = 8;       // coarse coverage estimate stride
+
+static int         gLockCounter = 0;       // frames to hold current crop
+
+// --- Immediate lock mode (fit once, then hold forever) ---
+static bool gImmediateLock = true;          // lock on first good crop
+static bool gCropLocked = false;         // becomes true after first lock
+static UINT gLockSrcW = 0, gLockSrcH = 0;  // remember source size when we locked
+
+// --------------------------------------------------------------------------------------
+// Texture create (recreate on size change)
 static void BinkOverlay_CreateTexture(LPDIRECT3DDEVICE8 dev, UINT w, UINT h)
 {
     if (!dev) return;
@@ -152,7 +210,7 @@ static void BinkOverlay_CreateTexture(LPDIRECT3DDEVICE8 dev, UINT w, UINT h)
     if (gOverlayTex) { gOverlayTex->Release(); gOverlayTex = nullptr; }
     gOverlayTexW = gOverlayTexH = 0;
 
-    HRESULT hr = dev->CreateTexture(
+    const HRESULT hr = dev->CreateTexture(
         w, h, 1,
         D3DUSAGE_DYNAMIC,
         D3DFMT_A8R8G8B8,
@@ -160,301 +218,464 @@ static void BinkOverlay_CreateTexture(LPDIRECT3DDEVICE8 dev, UINT w, UINT h)
         &gOverlayTex
     );
 
-    if (SUCCEEDED(hr))
-    {
+    if (SUCCEEDED(hr)) {
         gOverlayTexW = w;
         gOverlayTexH = h;
-        std::cout << "[BINK] Created overlay texture " << w << "x" << h << std::endl;
-    }
-    else
-    {
-        std::cerr << "[BINK] CreateTexture failed hr=0x" << std::hex << hr << std::dec << std::endl;
     }
 }
 
-static void BinkDetectCropBox()
+// --------------------------------------------------------------------------------------
+// Helpers for stabilizer
+static inline void ClampCropToSrc(CropBox& c) {
+    if (c.w < kMinCropSizePx) c.w = (float)kMinCropSizePx;
+    if (c.h < kMinCropSizePx) c.h = (float)kMinCropSizePx;
+    if (c.x < 0) c.x = 0;
+    if (c.y < 0) c.y = 0;
+    if (c.x + c.w > (float)gSrcW) c.x = (float)gSrcW - c.w;
+    if (c.y + c.h > (float)gSrcH) c.y = (float)gSrcH - c.h;
+}
+
+static inline void PadCrop(CropBox& c, int pad) {
+    c.x -= pad; c.y -= pad; c.w += pad * 2.0f; c.h += pad * 2.0f;
+    ClampCropToSrc(c);
+}
+
+static inline float CenterDx(const CropBox& a, const CropBox& b) { return ((a.x + a.w * 0.5f) - (b.x + b.w * 0.5f)); }
+static inline float CenterDy(const CropBox& a, const CropBox& b) { return ((a.y + a.h * 0.5f) - (b.y + b.h * 0.5f)); }
+static inline float AbsF(float v) { return (v < 0 ? -v : v); }
+
+// Quick % of non-black pixels on a coarse grid
+static float EstimateNonBlackCoverage() {
+    if (gOverlayFrame.empty() || !gSrcW || !gSrcH || !gSrcPitch) return 1.0f; // assume “good”
+    size_t samples = 0, lit = 0;
+    if (gSrcBpp == 4) {
+        for (UINT y = 0; y < gSrcH; y += kDownsampleStride) {
+            const unsigned char* row = gOverlayFrame.data() + y * gSrcPitch;
+            for (UINT x = 0; x < gSrcW; x += kDownsampleStride) {
+                const unsigned char* p = row + x * 4;
+                const float sum = float(p[0]) + float(p[1]) + float(p[2]); // BGR
+                ++samples; if (sum > kBlackThresholdBgrSum) ++lit;
+            }
+        }
+    }
+    else { // 565
+        for (UINT y = 0; y < gSrcH; y += kDownsampleStride) {
+            const uint16_t* row = reinterpret_cast<const uint16_t*>(gOverlayFrame.data() + y * gSrcPitch);
+            for (UINT x = 0; x < gSrcW; x += kDownsampleStride) {
+                const uint16_t p = row[x];
+                const int r5 = (p >> 11) & 0x1F, g6 = (p >> 5) & 0x3F, b5 = p & 0x1F;
+                const int sum = r5 + g6 + b5;
+                ++samples; if (sum > 3) ++lit;
+            }
+        }
+    }
+    if (!samples) return 1.0f;
+    return float(lit) / float(samples);
+}
+
+// Crop detection (prefers Rect-hint when available; otherwise scans for non-black)
+static CropBox DetectRawCrop()
 {
+    CropBox out;
     // defaults: full image
-    gCropX = 0; gCropY = 0; gCropW = gSrcW; gCropH = gSrcH;
-    if (gOverlayFrame.empty() || !gSrcW || !gSrcH || !gSrcPitch || !gSrcBpp) return;
+    out.x = 0; out.y = 0; out.w = (float)gSrcW; out.h = (float)gSrcH;
+    if (gOverlayFrame.empty() || !gSrcW || !gSrcH || !gSrcPitch || !gSrcBpp) return out;
+
+    // If we have a good Rect hint, trust it
+    if (gHasRectHint && gHintW >= (UINT)kMinCropSizePx && gHintH >= (UINT)kMinCropSizePx) {
+        out.x = (float)gHintX;
+        out.y = (float)gHintY;
+        out.w = (float)gHintW;
+        out.h = (float)gHintH;
+        ClampCropToSrc(out);
+        return out;
+    }
 
     auto isNonBlackRow = [&](UINT y)->bool {
         const unsigned char* row = gOverlayFrame.data() + y * gSrcPitch;
-        const int step = 8;           // sample every 8th pixel for speed
-        const int thresh = 12;        // > ~12 brightness counts as non-black
+        const UINT step = 8;
         if (gSrcBpp == 4) {
             for (UINT x = 0; x < gSrcW; x += step) {
                 const unsigned char* p = row + x * 4;
-                int v = p[0] + p[1] + p[2];
-                if (v > thresh) return true;
+                if ((int)p[0] + p[1] + p[2] > (int)kBlackThresholdBgrSum) return true;
             }
         }
         else {
             const uint16_t* px = reinterpret_cast<const uint16_t*>(row);
             for (UINT x = 0; x < gSrcW; x += step) {
-                uint16_t p = px[x];
-                int r5 = (p >> 11) & 0x1F, g6 = (p >> 5) & 0x3F, b5 = p & 0x1F;
-                int v = r5 + g6 + b5;
-                if (v > 2) return true; // tiny threshold in 5/6-bit space
+                const uint16_t p = px[x];
+                const int r5 = (p >> 11) & 0x1F, g6 = (p >> 5) & 0x3F, b5 = p & 0x1F;
+                if (r5 + g6 + b5 > 3) return true;
             }
         }
         return false;
         };
 
     auto isNonBlackCol = [&](UINT x)->bool {
-        const int step = 8;
+        const UINT step = 8;
         if (gSrcBpp == 4) {
             for (UINT y = 0; y < gSrcH; y += step) {
                 const unsigned char* p = gOverlayFrame.data() + y * gSrcPitch + x * 4;
-                int v = p[0] + p[1] + p[2];
-                if (v > 12) return true;
+                if ((int)p[0] + p[1] + p[2] > (int)kBlackThresholdBgrSum) return true;
             }
         }
         else {
             for (UINT y = 0; y < gSrcH; y += step) {
                 const uint16_t* row = reinterpret_cast<const uint16_t*>(gOverlayFrame.data() + y * gSrcPitch);
-                uint16_t p = row[x];
-                int r5 = (p >> 11) & 0x1F, g6 = (p >> 5) & 0x3F, b5 = p & 0x1F;
-                int v = r5 + g6 + b5;
-                if (v > 2) return true;
+                const uint16_t p = row[x];
+                const int r5 = (p >> 11) & 0x1F, g6 = (p >> 5) & 0x3F, b5 = p & 0x1F;
+                if (r5 + g6 + b5 > 3) return true;
             }
         }
         return false;
         };
 
-    // find top
-    UINT top = 0; while (top < gSrcH && !isNonBlackRow(top)) ++top;
-    // find bottom
-    int bottom = int(gSrcH) - 1; while (bottom >= 0 && !isNonBlackRow(UINT(bottom))) --bottom;
-    if (bottom < int(top)) { top = 0; bottom = int(gSrcH) - 1; }
+    // Limit scan to a window near the hint, if present
+    UINT scanLeft = 0, scanTop = 0;
+    UINT scanRight = gSrcW ? (gSrcW - 1) : 0;
+    UINT scanBottom = gSrcH ? (gSrcH - 1) : 0;
 
-    // find left
-    UINT left = 0; while (left < gSrcW && !isNonBlackCol(left)) ++left;
-    // find right
-    int right = int(gSrcW) - 1; while (right >= 0 && !isNonBlackCol(UINT(right))) --right;
-    if (right < int(left)) { left = 0; right = int(gSrcW) - 1; }
+    auto clampu = [](int v, int lo, int hi)->UINT { if (v < lo) v = lo; if (v > hi) v = hi; return (UINT)v; };
 
-    gCropX = left;
-    gCropY = top;
-    gCropW = (right >= int(left)) ? UINT(right - int(left) + 1) : gSrcW;
-    gCropH = (bottom >= int(top)) ? UINT(bottom - int(top) + 1) : gSrcH;
+    if (gHasRectHint) {
+        const int pad = 64;
+        scanLeft = clampu(int(gHintX) - pad, 0, int(gSrcW));
+        scanTop = clampu(int(gHintY) - pad, 0, int(gSrcH));
+        scanRight = clampu(int(gHintX + (gHintW ? gHintW : gSrcW / 2)) + pad, 0, int(gSrcW) - 1);
+        scanBottom = clampu(int(gHintY + (gHintH ? gHintH : gSrcH / 2)) + pad, 0, int(gSrcH) - 1);
+    }
 
-    // safety: avoid degenerate crop
-    if (gCropW < 32 || gCropH < 32) { gCropX = 0; gCropY = 0; gCropW = gSrcW; gCropH = gSrcH; }
+    // find top/bottom inside scan window
+    UINT top = scanTop; while (top <= scanBottom && !isNonBlackRow(top)) ++top;
+    int  bot = int(scanBottom); while (bot >= int(top) && !isNonBlackRow(UINT(bot))) --bot;
+    if (bot < int(top)) { top = scanTop; bot = int(scanBottom); }
 
-    // log occasionally
-    static DWORD last = 0; DWORD now = GetTickCount();
-    if (now - last > 500) {
-        char msg[256];
-        _snprintf(msg, sizeof(msg), "[BINK] crop -> x=%u y=%u w=%u h=%u (src=%ux%u)",
-            gCropX, gCropY, gCropW, gCropH, gSrcW, gSrcH);
-        OutputDebugStringA(msg); OutputDebugStringA("\n");
-        last = now;
+    // find left/right inside scan window
+    UINT left = scanLeft; while (left <= scanRight && !isNonBlackCol(left)) ++left;
+    int  right = int(scanRight); while (right >= int(left) && !isNonBlackCol(UINT(right))) --right;
+    if (right < int(left)) { left = scanLeft; right = int(scanRight); }
+
+    out.x = float(left);
+    out.y = float(top);
+    out.w = float((right >= int(left)) ? UINT(right - int(left) + 1) : (scanRight - scanLeft + 1));
+    out.h = float((bot >= int(top)) ? UINT(bot - int(top) + 1) : (scanBottom - scanTop + 1));
+
+    if (out.w < kMinCropSizePx || out.h < kMinCropSizePx) {
+        out.x = 0; out.y = 0; out.w = (float)gSrcW; out.h = (float)gSrcH;
+    }
+    ClampCropToSrc(out);
+    return out;
+}
+
+// Accept or reject raw detection and update gStable with smoothing
+static void StabilizeCrop()
+{
+    // Bootstrap stable box
+    if (gStable.w == 0 || gStable.h == 0) {
+        gStable.x = 0; gStable.y = 0; gStable.w = (float)gSrcW; gStable.h = (float)gSrcH;
+        gPrevStable = gStable;
+        gLockCounter = 0;
+    }
+
+    // If frame is very dark, freeze crop (prevents jitter on fades/letterbox)
+    const float coverage = EstimateNonBlackCoverage();
+    if (coverage < kMinNonBlackCoverage) {
+        if (gFmvDebug) OutputDebugStringA("[FMV] Stabilizer: too dark, freezing crop.\n");
+        if (gLockCounter > 0) --gLockCounter;
+        return;
+    }
+
+    // Raw detect then pad
+    gDetected = DetectRawCrop();
+    PadCrop(gDetected, kPadPx);
+
+    // Respect a short lock window after accepting a change
+    if (gLockCounter > 0) {
+        --gLockCounter;
+        return;
+    }
+
+    // Hysteresis: only accept if shift/size exceeds thresholds
+    const float dx = AbsF(CenterDx(gDetected, gStable));
+    const float dy = AbsF(CenterDy(gDetected, gStable));
+    const float dw = AbsF(gDetected.w - gStable.w);
+    const float dh = AbsF(gDetected.h - gStable.h);
+
+    const bool moved = (dx > kMoveHysteresisPx) || (dy > kMoveHysteresisPx);
+    const bool sized = (dw > kSizeHysteresisPx) || (dh > kSizeHysteresisPx);
+
+    if (moved || sized) {
+        auto ema = [&](float oldv, float newv) -> float { return oldv * (1.0f - kEmaAlpha) + newv * kEmaAlpha; };
+        gPrevStable = gStable;
+        gStable.x = ema(gStable.x, gDetected.x);
+        gStable.y = ema(gStable.y, gDetected.y);
+        gStable.w = ema(gStable.w, gDetected.w);
+        gStable.h = ema(gStable.h, gDetected.h);
+        ClampCropToSrc(gStable);
+        gLockCounter = kLockFramesAfterAccept;
+
+        if (gFmvDebug) {
+            char buf[160];
+            _snprintf(buf, sizeof(buf), "[FMV] Stabilizer accept: dx=%.2f dy=%.2f dw=%.2f dh=%.2f\n", dx, dy, dw, dh);
+            OutputDebugStringA(buf);
+        }
+    }
+    else {
+        if (gFmvDebug) OutputDebugStringA("[FMV] Stabilizer hold (within hysteresis).\n");
     }
 }
 
-static void BinkOverlay_Upload(LPDIRECT3DDEVICE8 dev)
+// --------------------------------------------------------------------------------------
+// Upload the captured frame into the D3D8 texture, then compute (stabilized) crop
+static void BinkOverlay_UploadIfDue(LPDIRECT3DDEVICE8 dev)
 {
     if (!dev || !gOverlayTex) return;
-    if (gOverlayFrame.empty() || !gSrcW || !gSrcH || !gSrcPitch || !gSrcBpp) return;
+    if (gUploadEveryN < 1) gUploadEveryN = 1;
+
+    // Only upload when we actually have a fresh frame
+    if (!gOverlayDirty) return;
+
+    // Throttle uploads
+    if ((++s_uploadGate % (unsigned)gUploadEveryN) != 0) return;
 
     D3DLOCKED_RECT lr{};
-    HRESULT hr = gOverlayTex->LockRect(0, &lr, nullptr, D3DLOCK_DISCARD);
-    if (FAILED(hr))
-    {
-        std::cerr << "[BINK] LockRect overlay failed hr=0x" << std::hex << hr << std::dec << std::endl;
-        return;
-    }
+    if (FAILED(gOverlayTex->LockRect(0, &lr, nullptr, D3DLOCK_DISCARD))) return;
 
     const unsigned char* src = gOverlayFrame.data();
     unsigned char* dst = reinterpret_cast<unsigned char*>(lr.pBits);
 
-    if (gSrcBpp == 4)
-    {
-        // Assume X8R8G8B8 from Bink (little-endian BGRA in memory). Set A=0xFF.
-        for (UINT y = 0; y < gSrcH; ++y)
-        {
+    if (gSrcBpp == 4) {
+        // BGRX -> BGRA (A=255)
+        for (UINT y = 0; y < gSrcH; ++y) {
             const unsigned char* s = src + y * gSrcPitch;
             unsigned char* d = dst + y * lr.Pitch;
-            for (UINT x = 0; x < gSrcW; ++x)
-            {
-                unsigned char B = s[x * 4 + 0];
-                unsigned char G = s[x * 4 + 1];
-                unsigned char R = s[x * 4 + 2];
-                d[x * 4 + 0] = B;
-                d[x * 4 + 1] = G;
-                d[x * 4 + 2] = R;
-                d[x * 4 + 3] = 0xFF;
+            for (UINT x = 0; x < gSrcW; ++x) {
+                const UINT ix = x * 4;
+                d[ix + 0] = s[ix + 0];
+                d[ix + 1] = s[ix + 1];
+                d[ix + 2] = s[ix + 2];
+                d[ix + 3] = 0xFF;
             }
         }
     }
-    else // 16-bit 565 -> expand to 8888
-    {
-        for (UINT y = 0; y < gSrcH; ++y)
-        {
+    else { // 565 -> 8888
+        for (UINT y = 0; y < gSrcH; ++y) {
             const uint16_t* s = reinterpret_cast<const uint16_t*>(src + y * gSrcPitch);
             uint32_t* d = reinterpret_cast<uint32_t*>(dst + y * lr.Pitch);
-            for (UINT x = 0; x < gSrcW; ++x)
-            {
-                uint16_t p = s[x];
-                uint8_t r5 = (p >> 11) & 0x1F;
-                uint8_t g6 = (p >> 5) & 0x3F;
-                uint8_t b5 = p & 0x1F;
-                uint8_t R = (r5 * 527 + 23) >> 6;
-                uint8_t G = (g6 * 259 + 33) >> 6;
-                uint8_t B = (b5 * 527 + 23) >> 6;
-                d[x] = (0xFFu << 24) | (R << 16) | (G << 8) | (B);
+            for (UINT x = 0; x < gSrcW; ++x) {
+                const uint16_t p = s[x];
+                const uint8_t r5 = (p >> 11) & 0x1F, g6 = (p >> 5) & 0x3F, b5 = p & 0x1F;
+                const uint8_t R = (r5 * 527 + 23) >> 6;
+                const uint8_t G = (g6 * 259 + 33) >> 6;
+                const uint8_t B = (b5 * 527 + 23) >> 6;
+                d[x] = (0xFFu << 24) | (R << 16) | (G << 8) | B;
             }
         }
     }
 
     gOverlayTex->UnlockRect(0);
-    BinkDetectCropBox();
 
+    // --- Detection + (optional) immediate lock ---
+    if (gDetectCrop) {
+        if (gImmediateLock) {
+            // If we haven't locked yet, try to acquire a stable crop and lock it
+            if (!gCropLocked) {
+                bool locked = false;
+
+                // Prefer authoritative Rect hint if available and sensible
+                if (gHasRectHint && gHintW >= (UINT)kMinCropSizePx && gHintH >= (UINT)kMinCropSizePx) {
+                    gStable.x = (float)gHintX;
+                    gStable.y = (float)gHintY;
+                    gStable.w = (float)gHintW;
+                    gStable.h = (float)gHintH;
+                    PadCrop(gStable, kPadPx);
+                    gPrevStable = gStable;
+                    gCropLocked = true;
+                    gLockSrcW = gSrcW; gLockSrcH = gSrcH;
+                    locked = true;
+                    if (gFmvDebug) OutputDebugStringA("[FMV] ImmediateLock: locked from Rect hint.\n");
+                }
+
+                // If no good hint, run one detection pass
+                if (!locked) {
+                    const float coverage = EstimateNonBlackCoverage();
+                    if (coverage >= kMinNonBlackCoverage) {
+                        gDetected = DetectRawCrop();
+                        PadCrop(gDetected, kPadPx);
+                        // sanity check
+                        if (gDetected.w >= kMinCropSizePx && gDetected.h >= kMinCropSizePx) {
+                            gStable = gDetected;
+                            gPrevStable = gStable;
+                            gCropLocked = true;
+                            gLockSrcW = gSrcW; gLockSrcH = gSrcH;
+                            if (gFmvDebug) OutputDebugStringA("[FMV] ImmediateLock: locked from detection.\n");
+                        }
+                        else {
+                            // fallback: use full frame until we can lock
+                            gStable.x = 0; gStable.y = 0; gStable.w = (float)gSrcW; gStable.h = (float)gSrcH;
+                            gPrevStable = gStable;
+                        }
+                    }
+                    else {
+                        // very dark: hold full frame until signal improves
+                        gStable.x = 0; gStable.y = 0; gStable.w = (float)gSrcW; gStable.h = (float)gSrcH;
+                        gPrevStable = gStable;
+                        if (gFmvDebug) OutputDebugStringA("[FMV] ImmediateLock: too dark to lock; using full frame.\n");
+                    }
+                }
+            }
+            // If locked, do nothing — keep gStable forever (until src size changes)
+        }
+        else {
+            // Dynamic stabilized behavior
+            StabilizeCrop();
+        }
+    }
+    else {
+        // No crop detection: use full frame
+        gStable.x = 0; gStable.y = 0; gStable.w = (float)gSrcW; gStable.h = (float)gSrcH;
+        gPrevStable = gStable;
+        gLockCounter = 0;
+    }
+
+    gOverlayDirty = false;
+
+    if (gFmvDebug) {
+        char buf[192];
+        _snprintf(buf, sizeof(buf),
+            "[FMV] Upload ok (N=%d) %s stable=%ux%u+%u,%u\n",
+            gUploadEveryN,
+            (gImmediateLock ? (gCropLocked ? "[LOCKED]" : "[LOCKING]") : "[DYNAMIC]"),
+            (unsigned)gStable.w, (unsigned)gStable.h, (unsigned)gStable.x, (unsigned)gStable.y);
+        OutputDebugStringA(buf);
+    }
 }
 
-
-
-static void BinkOverlay_Draw(LPDIRECT3DDEVICE8 dev)
+static void BinkOverlay_DrawToSurface(LPDIRECT3DDEVICE8 dev, IDirect3DSurface8* targetBB)
 {
 #ifndef D3DRS_SCISSORTESTENABLE
-#define D3DRS_SCISSORTESTENABLE (D3DRENDERSTATETYPE)174  // D3D8 constant
+#define D3DRS_SCISSORTESTENABLE (D3DRENDERSTATETYPE)174
 #endif
+    if (!dev || !targetBB) return;
+    if (!gOverlayActiveFrames || !gSrcW || !gSrcH) return;
 
-    DWORD rsScissor = 0;
-    dev->GetRenderState(D3DRS_SCISSORTESTENABLE, &rsScissor);
-    dev->SetRenderState(D3DRS_SCISSORTESTENABLE, FALSE);
-
-    if (!dev) return;
-    if (!gSrcW || !gSrcH) return;
-    if (gOverlayActiveFrames == 0) return;
-
-    // Ensure texture exists and upload latest frame
+    // Ensure texture & upload (which also stabilizes/locks crop)
     BinkOverlay_CreateTexture(dev, gSrcW, gSrcH);
-    BinkOverlay_Upload(dev);
+    BinkOverlay_UploadIfDue(dev);
     if (!gOverlayTex) return;
 
-    // --------------------------
-    // Save render target & depth
+    // Save current RT/DS
     IDirect3DSurface8* oldRT = nullptr;
     IDirect3DSurface8* oldDS = nullptr;
     dev->GetRenderTarget(&oldRT);
     dev->GetDepthStencilSurface(&oldDS);
 
-    // Grab real backbuffer
-    IDirect3DSurface8* bb = nullptr;
-    if (FAILED(dev->GetBackBuffer(0, D3DBACKBUFFER_TYPE_MONO, &bb)) || !bb)
-    {
-        if (oldRT) oldRT->Release();
-        if (oldDS) oldDS->Release();
-        return;
-    }
+    // Switch to the target backbuffer if needed
+    const bool switchedRT = (oldRT != targetBB);
+    if (switchedRT) dev->SetRenderTarget(targetBB, oldDS);
 
-    // If we weren't already on the backbuffer, switch to it while we draw
-    bool switchedRT = (oldRT != bb);
-    if (switchedRT)
-    {
-        dev->SetRenderTarget(bb, oldDS);
-    }
-
-    // Determine backbuffer size
+    // Query the backbuffer size
     D3DSURFACE_DESC bbDesc{};
-    bb->GetDesc(&bbDesc);
-    UINT bbW = bbDesc.Width;
-    UINT bbH = bbDesc.Height;
-    if (!bbW || !bbH)
-    {
-        if (bb) bb->Release();
+    targetBB->GetDesc(&bbDesc);
+    const UINT bbW = bbDesc.Width, bbH = bbDesc.Height;
+
+    // Early out if nonsense (restore only what we changed so far)
+    if (!bbW || !bbH) {
+        if (switchedRT && oldRT) dev->SetRenderTarget(oldRT, oldDS);
         if (oldRT) oldRT->Release();
         if (oldDS) oldDS->Release();
         return;
     }
 
-    // Decide output rectangle:
-    // decide output size using CROP (not full src)
-    float srcW = float(gCropW);
-    float srcH = float(gCropH);
+    // Choose sizing:
+    float x0, y0, x1, y1, drawW, drawH;
+    const float srcW = (gStable.w > 0 ? gStable.w : (float)gSrcW);
+    const float srcH = (gStable.h > 0 ? gStable.h : (float)gSrcH);
+    const float outW = float(bbW), outH = float(bbH);
 
-    // your target output area = whole backbuffer (bbW x bbH)
-    float outW = float(bbW), outH = float(bbH);
-
-    float drawW, drawH;
-    if (gMovieW && gMovieH) {
-        drawW = (float)gMovieW;
-        drawH = (float)gMovieH;
-        drawW = (drawW > outW) ? outW : drawW;
-        drawH = (drawH > outH) ? outH : drawH;
+    if (gMovieStretch) {
+        // Fill whole backbuffer (ignore AR)
+        drawW = outW; drawH = outH;
+        x0 = float(gMovieOffsetX); y0 = float(gMovieOffsetY);
+        x1 = x0 + drawW; y1 = y0 + drawH;
+    }
+    else if (gMovieW && gMovieH && !gKeepAspect) {
+        // Fixed size (no aspect correction), centered + offsets
+        drawW = (float)((gMovieW > bbW) ? bbW : gMovieW);
+        drawH = (float)((gMovieH > bbH) ? bbH : gMovieH);
+        x0 = (outW - drawW) * 0.5f + float(gMovieOffsetX);
+        y0 = (outH - drawH) * 0.5f + float(gMovieOffsetY);
+        x1 = x0 + drawW; y1 = y0 + drawH;
     }
     else {
-        // auto-fit crop rect preserving aspect
-        float s = (std::min)(outW / srcW, outH / srcH);
-        drawW = srcW * s;
-        drawH = srcH * s;
+        // Aspect-fit (default when Stretch=0 or KeepAspect=1)
+        const float s = (std::min)(outW / srcW, outH / srcH);
+        drawW = srcW * s; drawH = srcH * s;
+        x0 = (outW - drawW) * 0.5f + float(gMovieOffsetX);
+        y0 = (outH - drawH) * 0.5f + float(gMovieOffsetY);
+        x1 = x0 + drawW; y1 = y0 + drawH;
     }
 
-    float x0 = (outW - drawW) * 0.5f;
-    float y0 = (outH - drawH) * 0.5f;
-    float x1 = x0 + drawW;
-    float y1 = y0 + drawH;
 
-    // crop -> UVs
-    float u0 = float(gCropX) / float(gOverlayTexW);
-    float v0 = float(gCropY) / float(gOverlayTexH);
-    float u1 = float(gCropX + gCropW) / float(gOverlayTexW);
-    float v1 = float(gCropY + gCropH) / float(gOverlayTexH);
+    {
+        char buf[256];
+        const char* mode =
+            gMovieStretch ? "STRETCH" :
+            (gMovieW && gMovieH && !gKeepAspect) ? "FIXED_SIZE" :
+            "ASPECT_FIT";
+        _snprintf(buf, sizeof(buf),
+            "[FMV] Draw: mode=%s rect=%.1f,%.1f -> %.1f,%.1f  srcCrop=%ux%u+%u,%u\n",
+            mode, x0, y0, x1, y1,
+            (unsigned)gStable.w, (unsigned)gStable.h,
+            (unsigned)gStable.x, (unsigned)gStable.y);
+        OutputDebugStringA(buf);
+    }
 
-    struct VERT { float x, y, z, rhw, u, v; };
-    VERT v[4] = {
-        { x0, y0, 0,1, u0, v0 },
-        { x1, y0, 0,1, u1, v0 },
-        { x0, y1, 0,1, u0, v1 },
-        { x1, y1, 0,1, u1, v1 },
-    };
+    // Stable crop -> UVs
+    const float u0 = (gOverlayTexW ? ((gStable.w > 0 ? gStable.x : 0.0f)) / float(gOverlayTexW) : 0.0f);
+    const float v0 = (gOverlayTexH ? ((gStable.h > 0 ? gStable.y : 0.0f)) / float(gOverlayTexH) : 0.0f);
+    const float u1 = (gOverlayTexW ? ((gStable.w > 0 ? gStable.x + gStable.w : (float)gSrcW)) / float(gOverlayTexW) : 1.0f);
+    const float v1 = (gOverlayTexH ? ((gStable.h > 0 ? gStable.y + gStable.h : (float)gSrcH)) / float(gOverlayTexH) : 1.0f);
 
-    // --------------------------
-    // Save state we will touch
-    D3DVIEWPORT8 oldVP{};
-    dev->GetViewport(&oldVP);
-
-    DWORD oldVS = 0; dev->GetVertexShader(&oldVS);
-    DWORD oldPS = 0; dev->GetPixelShader(&oldPS);
-
-    DWORD rsZEnable = 0, rsZWrite = 0, rsAlphaTest = 0, rsAlphaBlend = 0, rsFog = 0, rsCull = 0, rsLight = 0, rsColorWrite = 0;
-    dev->GetRenderState(D3DRS_ZENABLE, &rsZEnable);
-    dev->GetRenderState(D3DRS_ZWRITEENABLE, &rsZWrite);
-    dev->GetRenderState(D3DRS_ALPHATESTENABLE, &rsAlphaTest);
-    dev->GetRenderState(D3DRS_ALPHABLENDENABLE, &rsAlphaBlend);
+    // Save state we touch
+    D3DVIEWPORT8 oldVP{}; dev->GetViewport(&oldVP);
+    DWORD oldVS = 0, oldPS = 0; dev->GetVertexShader(&oldVS); dev->GetPixelShader(&oldPS);
+    DWORD rsZ = 0, rsZW = 0, rsAT = 0, rsAB = 0, rsFog = 0, rsCull = 0, rsLight = 0, rsCW = 0, rsScissor = 0;
+    dev->GetRenderState(D3DRS_ZENABLE, &rsZ);
+    dev->GetRenderState(D3DRS_ZWRITEENABLE, &rsZW);
+    dev->GetRenderState(D3DRS_ALPHATESTENABLE, &rsAT);
+    dev->GetRenderState(D3DRS_ALPHABLENDENABLE, &rsAB);
     dev->GetRenderState(D3DRS_FOGENABLE, &rsFog);
     dev->GetRenderState(D3DRS_CULLMODE, &rsCull);
     dev->GetRenderState(D3DRS_LIGHTING, &rsLight);
-    dev->GetRenderState(D3DRS_COLORWRITEENABLE, &rsColorWrite);
+    dev->GetRenderState(D3DRS_COLORWRITEENABLE, &rsCW);
+    dev->GetRenderState(D3DRS_SCISSORTESTENABLE, &rsScissor);
 
-    DWORD ts0_ColorOp = 0, ts0_ColorArg1 = 0, ts0_AlphaOp = 0, ts0_Mag = 0, ts0_Min = 0, ts0_Mip = 0;
-    dev->GetTextureStageState(0, D3DTSS_COLOROP, &ts0_ColorOp);
-    dev->GetTextureStageState(0, D3DTSS_COLORARG1, &ts0_ColorArg1);
-    dev->GetTextureStageState(0, D3DTSS_ALPHAOP, &ts0_AlphaOp);
+    DWORD ts0_CO = 0, ts0_CA1 = 0, ts0_AO = 0, ts0_Mag = 0, ts0_Min = 0, ts0_Mip = 0, ts0_AddrU = 0, ts0_AddrV = 0;
+    dev->GetTextureStageState(0, D3DTSS_COLOROP, &ts0_CO);
+    dev->GetTextureStageState(0, D3DTSS_COLORARG1, &ts0_CA1);
+    dev->GetTextureStageState(0, D3DTSS_ALPHAOP, &ts0_AO);
     dev->GetTextureStageState(0, D3DTSS_MAGFILTER, &ts0_Mag);
     dev->GetTextureStageState(0, D3DTSS_MINFILTER, &ts0_Min);
     dev->GetTextureStageState(0, D3DTSS_MIPFILTER, &ts0_Mip);
-
-    DWORD ts1_ColorOp = 0, ts1_AlphaOp = 0;
-    dev->GetTextureStageState(1, D3DTSS_COLOROP, &ts1_ColorOp);
-    dev->GetTextureStageState(1, D3DTSS_ALPHAOP, &ts1_AlphaOp);
+    dev->GetTextureStageState(0, D3DTSS_ADDRESSU, &ts0_AddrU);
+    dev->GetTextureStageState(0, D3DTSS_ADDRESSV, &ts0_AddrV);
 
     IDirect3DBaseTexture8* oldTex0 = nullptr;
     IDirect3DBaseTexture8* oldTex1 = nullptr;
     dev->GetTexture(0, &oldTex0);
     dev->GetTexture(1, &oldTex1);
 
-    // --------------------------
-    // Fullscreen viewport
-    D3DVIEWPORT8 vp{}; vp.X = 0; vp.Y = 0; vp.Width = bbW; vp.Height = bbH; vp.MinZ = 0.0f; vp.MaxZ = 1.0f;
-    dev->SetViewport(&vp);
+    // Set viewport and do the blit
+    {
+        D3DVIEWPORT8 vp;
+        vp.X = 0; vp.Y = 0; vp.Width = bbW; vp.Height = bbH; vp.MinZ = 0.0f; vp.MaxZ = 1.0f;
+        dev->SetViewport(&vp);
+    }
 
-    // Minimal fixed-function setup for a textured blit
     dev->SetPixelShader(0);
     dev->SetTexture(0, gOverlayTex);
-    dev->SetTexture(1, nullptr); // kill any second-stage combiner
+    dev->SetTexture(1, nullptr);
 
     dev->SetRenderState(D3DRS_ZENABLE, FALSE);
     dev->SetRenderState(D3DRS_ZWRITEENABLE, FALSE);
@@ -464,6 +685,7 @@ static void BinkOverlay_Draw(LPDIRECT3DDEVICE8 dev)
     dev->SetRenderState(D3DRS_CULLMODE, D3DCULL_NONE);
     dev->SetRenderState(D3DRS_LIGHTING, FALSE);
     dev->SetRenderState(D3DRS_COLORWRITEENABLE, 0xF);
+    dev->SetRenderState(D3DRS_SCISSORTESTENABLE, FALSE);
 
     dev->SetTextureStageState(0, D3DTSS_COLOROP, D3DTOP_SELECTARG1);
     dev->SetTextureStageState(0, D3DTSS_COLORARG1, D3DTA_TEXTURE);
@@ -471,117 +693,122 @@ static void BinkOverlay_Draw(LPDIRECT3DDEVICE8 dev)
     dev->SetTextureStageState(0, D3DTSS_MAGFILTER, D3DTEXF_LINEAR);
     dev->SetTextureStageState(0, D3DTSS_MINFILTER, D3DTEXF_LINEAR);
     dev->SetTextureStageState(0, D3DTSS_MIPFILTER, D3DTEXF_POINT);
-
-    dev->SetTextureStageState(1, D3DTSS_COLOROP, D3DTOP_DISABLE);
-    dev->SetTextureStageState(1, D3DTSS_ALPHAOP, D3DTOP_DISABLE);
-
-    // Draw in screen space
-    dev->SetVertexShader(D3DFVF_XYZRHW | D3DFVF_TEX1);
-    dev->DrawPrimitiveUP(D3DPT_TRIANGLESTRIP, 2, v, sizeof(VERT));
-    dev->SetRenderState(D3DRS_SCISSORTESTENABLE, rsScissor);
-
-    DWORD ts0_AddrU = 0, ts0_AddrV = 0;
-    dev->GetTextureStageState(0, D3DTSS_ADDRESSU, &ts0_AddrU);
-    dev->GetTextureStageState(0, D3DTSS_ADDRESSV, &ts0_AddrV);
     dev->SetTextureStageState(0, D3DTSS_ADDRESSU, D3DTADDRESS_CLAMP);
     dev->SetTextureStageState(0, D3DTSS_ADDRESSV, D3DTADDRESS_CLAMP);
-    // ... later restore:
-    dev->SetTextureStageState(0, D3DTSS_ADDRESSU, ts0_AddrU);
-    dev->SetTextureStageState(0, D3DTSS_ADDRESSV, ts0_AddrV);
 
-    // Debug once per draw
-    static DWORD lastTick = 0;
-    DWORD now = GetTickCount();
-    if (now - lastTick > 500) {
-        char msg[256];
-        _snprintf(msg, sizeof(msg), "[BINK] overlay draw -> bb=%ux%u src=%ux%u out=%ux%u rtSwitched=%d",
-            bbW, bbH, gSrcW, gSrcH, (UINT)drawW, (UINT)drawH, switchedRT ? 1 : 0);
-        OutputDebugStringA(msg); OutputDebugStringA("\n");
-        lastTick = now;
-    }
+    // Screen-space textured quad (pre-transformed)
+    struct VERT { float x, y, z, rhw, u, v; };
+    const float hx = -0.5f, hy = -0.5f; // D3D8 half-texel alignment
+    const VERT quad[4] =
+    {
+        { x0 + hx, y0 + hy, 0.0f, 1.0f, u0, v0 },
+        { x1 + hx, y0 + hy, 0.0f, 1.0f, u1, v0 },
+        { x0 + hx, y1 + hy, 0.0f, 1.0f, u0, v1 },
+        { x1 + hx, y1 + hy, 0.0f, 1.0f, u1, v1 },
+    };
 
-    // --------------------------
+    dev->SetVertexShader(D3DFVF_XYZRHW | D3DFVF_TEX1);
+    dev->DrawPrimitiveUP(D3DPT_TRIANGLESTRIP, 2, quad, sizeof(VERT));
+
     // Restore state
     dev->SetViewport(&oldVP);
     dev->SetVertexShader(oldVS);
     dev->SetPixelShader(oldPS);
 
-    dev->SetRenderState(D3DRS_ZENABLE, rsZEnable);
-    dev->SetRenderState(D3DRS_ZWRITEENABLE, rsZWrite);
-    dev->SetRenderState(D3DRS_ALPHATESTENABLE, rsAlphaTest);
-    dev->SetRenderState(D3DRS_ALPHABLENDENABLE, rsAlphaBlend);
+    dev->SetRenderState(D3DRS_ZENABLE, rsZ);
+    dev->SetRenderState(D3DRS_ZWRITEENABLE, rsZW);
+    dev->SetRenderState(D3DRS_ALPHATESTENABLE, rsAT);
+    dev->SetRenderState(D3DRS_ALPHABLENDENABLE, rsAB);
     dev->SetRenderState(D3DRS_FOGENABLE, rsFog);
     dev->SetRenderState(D3DRS_CULLMODE, rsCull);
     dev->SetRenderState(D3DRS_LIGHTING, rsLight);
-    dev->SetRenderState(D3DRS_COLORWRITEENABLE, rsColorWrite);
+    dev->SetRenderState(D3DRS_COLORWRITEENABLE, rsCW);
+    dev->SetRenderState(D3DRS_SCISSORTESTENABLE, rsScissor);
 
-    dev->SetTextureStageState(0, D3DTSS_COLOROP, ts0_ColorOp);
-    dev->SetTextureStageState(0, D3DTSS_COLORARG1, ts0_ColorArg1);
-    dev->SetTextureStageState(0, D3DTSS_ALPHAOP, ts0_AlphaOp);
+    dev->SetTextureStageState(0, D3DTSS_COLOROP, ts0_CO);
+    dev->SetTextureStageState(0, D3DTSS_COLORARG1, ts0_CA1);
+    dev->SetTextureStageState(0, D3DTSS_ALPHAOP, ts0_AO);
     dev->SetTextureStageState(0, D3DTSS_MAGFILTER, ts0_Mag);
     dev->SetTextureStageState(0, D3DTSS_MINFILTER, ts0_Min);
     dev->SetTextureStageState(0, D3DTSS_MIPFILTER, ts0_Mip);
-
-    dev->SetTextureStageState(1, D3DTSS_COLOROP, ts1_ColorOp);
-    dev->SetTextureStageState(1, D3DTSS_ALPHAOP, ts1_AlphaOp);
+    dev->SetTextureStageState(0, D3DTSS_ADDRESSU, ts0_AddrU);
+    dev->SetTextureStageState(0, D3DTSS_ADDRESSV, ts0_AddrV);
 
     dev->SetTexture(0, oldTex0);
     dev->SetTexture(1, oldTex1);
     if (oldTex0) oldTex0->Release();
     if (oldTex1) oldTex1->Release();
 
-    // Restore original render target if we switched
-    if (switchedRT)
-    {
-        dev->SetRenderTarget(oldRT, oldDS);
-    }
-
-    if (bb) bb->Release();
+    if (switchedRT && oldRT) dev->SetRenderTarget(oldRT, oldDS);
     if (oldRT) oldRT->Release();
     if (oldDS) oldDS->Release();
 
     if (gOverlayActiveFrames > 0) --gOverlayActiveFrames;
 }
 
-
-// Hook: capture the decoded frame after Bink writes it
+// --------------------------------------------------------------------------------------
+// Hook: capture the decoded frame after Bink writes it (basic variant)
 static int __stdcall hk_BinkCopyToBuffer(
     void* bnk, void* dest, int destpitch, int destheight, int destx, int desty, unsigned int flags)
 {
     if (!gReal_BinkCopyToBuffer)
         return 0;
 
-    int r = gReal_BinkCopyToBuffer(bnk, dest, destpitch, destheight, destx, desty, flags);
+    const int r = gReal_BinkCopyToBuffer(bnk, dest, destpitch, destheight, destx, desty, flags);
+    if (!dest || destpitch <= 0 || destheight <= 0) return r;
 
-    if (!dest || destpitch <= 0 || destheight <= 0)
-        return r;
+    // Guess source format
+    const UINT guessBpp = (destpitch % 4 == 0) ? 4u : 2u;
+    const UINT w = (guessBpp == 4) ? (UINT)(destpitch / 4) : (UINT)(destpitch / 2);
 
-    UINT guessBpp = (destpitch % 4 == 0) ? 4u : 2u;
-    UINT w = (guessBpp == 4) ? (UINT)(destpitch / 4) : (UINT)(destpitch / 2);
-    UINT h = (UINT)destheight;
+    // Make the logical height big enough to include the movie at its Y offset.
+    // Prefer device backbuffer height if we know it (from CreateDevice/Reset).
+    UINT H = (gTargetH ? gTargetH : (UINT)(desty + destheight));
+    if (H < (UINT)(desty + destheight)) H = (UINT)(desty + destheight);
 
-    size_t rowBytes = (size_t)destpitch;
-    size_t need = (size_t)h * rowBytes;
-    gOverlayFrame.resize(need);
+    const size_t rowBytes = (size_t)destpitch;
 
-    const unsigned char* src = reinterpret_cast<const unsigned char*>(dest);
+    // Create a zero-filled frame of H rows.
+    gOverlayFrame.assign((size_t)H * rowBytes, 0);
+
+    const unsigned char* src = (const unsigned char*)dest;
     unsigned char* dst = gOverlayFrame.data();
-    for (UINT y = 0; y < h; ++y)
-        memcpy(dst + y * rowBytes, src + y * rowBytes, rowBytes);
+
+    // Copy **at the correct Y offset** so the movie is not glued to the top.
+    // We copy full rows to keep it simple and safe.
+    for (int y = 0; y < destheight; ++y)
+    {
+        memcpy(dst + (size_t)(y + desty) * rowBytes,
+            src + (size_t)(y + desty) * rowBytes,
+            rowBytes);
+    }
 
     gSrcW = w;
-    gSrcH = h;
+    gSrcH = H;
     gSrcPitch = destpitch;
     gSrcBpp = guessBpp;
-    gOverlayActiveFrames = 3;
 
-    BinkLogf("CopyToBuffer captured frame %ux%u pitch=%u bpp=%u flags=0x%X dx=%d dy=%d",
-        gSrcW, gSrcH, gSrcPitch, gSrcBpp, flags, destx, desty);
+    // If source dims changed, drop the lock & stale hint
+    if (gImmediateLock && (gSrcW != gLockSrcW || gSrcH != gLockSrcH)) {
+        gCropLocked = false;
+        gHasRectHint = false;
+    }
 
+    // Update placement hint (X/Y only in this path)
+    gHintX = (destx > 0 ? (UINT)destx : 0);
+    gHintY = (desty > 0 ? (UINT)desty : 0);
+    // Do not set gHasRectHint or W/H here
+
+    gOverlayActiveFrames = 6;
+    gOverlayDirty = true;
+
+    if (gFmvDebug) OutputDebugStringA("[FMV] Frame captured (basic, anchored)\n");
     return r;
 }
 
-// Hook: Rect variant
+
+// --------------------------------------------------------------------------------------
+// Hook: Rect variant (we get *real* movie size here)
 static int __stdcall hk_BinkCopyToBufferRect(
     void* bnk, void* dest, int destpitch, int destheight, int destx, int desty,
     unsigned int flags, unsigned int srcx, unsigned int srcy, unsigned int srcw, unsigned int srch)
@@ -589,37 +816,57 @@ static int __stdcall hk_BinkCopyToBufferRect(
     if (!gReal_BinkCopyToBufferRect)
         return 0;
 
-    int r = gReal_BinkCopyToBufferRect(bnk, dest, destpitch, destheight, destx, desty,
+    const int r = gReal_BinkCopyToBufferRect(bnk, dest, destpitch, destheight, destx, desty,
         flags, srcx, srcy, srcw, srch);
+    if (!dest || destpitch <= 0 || destheight <= 0) return r;
 
-    if (!dest || destpitch <= 0 || destheight <= 0)
-        return r;
+    const UINT guessBpp = (destpitch % 4 == 0) ? 4u : 2u;
+    const UINT w = (guessBpp == 4) ? (UINT)(destpitch / 4) : (UINT)(destpitch / 2);
 
-    UINT guessBpp = (destpitch % 4 == 0) ? 4u : 2u;
-    UINT w = (guessBpp == 4) ? (UINT)(destpitch / 4) : (UINT)(destpitch / 2);
-    UINT h = (UINT)destheight;
+    // Ensure frame can contain the rect at its offset.
+    UINT H = (gTargetH ? gTargetH : (UINT)(desty + (int)srch));
+    if (H < (UINT)(desty + (int)srch)) H = (UINT)(desty + (int)srch);
 
-    size_t rowBytes = (size_t)destpitch;
-    size_t need = (size_t)h * rowBytes;
-    gOverlayFrame.resize(need);
+    const size_t rowBytes = (size_t)destpitch;
+    gOverlayFrame.assign((size_t)H * rowBytes, 0);
 
-    const unsigned char* src = reinterpret_cast<const unsigned char*>(dest);
+    const unsigned char* src = (const unsigned char*)dest;
     unsigned char* dst = gOverlayFrame.data();
-    for (UINT y = 0; y < h; ++y)
-        memcpy(dst + y * rowBytes, src + y * rowBytes, rowBytes);
+
+    // Copy the rows that include the rect (copy full rows for safety).
+    for (UINT y = 0; y < srch; ++y)
+    {
+        memcpy(dst + (size_t)(y + desty) * rowBytes,
+            src + (size_t)(y + desty) * rowBytes,
+            rowBytes);
+    }
 
     gSrcW = w;
-    gSrcH = h;
+    gSrcH = H;
     gSrcPitch = destpitch;
     gSrcBpp = guessBpp;
-    gOverlayActiveFrames = 3;
 
-    BinkLogf("CopyToBufferRect captured frame %ux%u pitch=%u bpp=%u flags=0x%X src=%u,%u %ux%u dx=%d dy=%d",
-        gSrcW, gSrcH, gSrcPitch, gSrcBpp, flags, srcx, srcy, srcw, srch, destx, desty);
+    // If source dims changed, drop the lock & stale hint
+    if (gImmediateLock && (gSrcW != gLockSrcW || gSrcH != gLockSrcH)) {
+        gCropLocked = false;
+        gHasRectHint = false;
+    }
 
+    // Authoritative hint including movie size
+    gHintX = (destx > 0 ? (UINT)destx : 0);
+    gHintY = (desty > 0 ? (UINT)desty : 0);
+    gHintW = srcw;
+    gHintH = srch;
+    gHasRectHint = true;
+
+    gOverlayActiveFrames = 6;
+    gOverlayDirty = true;
+
+    if (gFmvDebug) OutputDebugStringA("[FMV] Frame captured (rect, anchored)\n");
     return r;
 }
 
+// --------------------------------------------------------------------------------------
 // --- helpers to match decorated exports -------------------------------------
 static const char* BnkBaseNameA(const char* path)
 {
@@ -634,25 +881,29 @@ static bool BnkIsSystemModulePath(const char* path)
     if (!path || !path[0]) return false;
     char sysdir[MAX_PATH]{};
     GetSystemWindowsDirectoryA(sysdir, MAX_PATH);
-    size_t n = strlen(sysdir);
+    const size_t n = strlen(sysdir);
     return _strnicmp(path, sysdir, n) == 0;
 }
 
-// NEW: accept undecorated, optional leading underscore, and stdcall suffix
+// Accept undecorated, optional leading underscore, and stdcall suffix
 static bool BnkNameMatches(const char* name, const char* want)
 {
     if (!name || !want) return false;
     if (name[0] == '_') name++; // skip leading underscore if present
-    size_t wn = strlen(want);
+    const size_t wn = strlen(want);
     if (_strnicmp(name, want, wn) != 0) return false;
     const char* p = name + wn;
     return (*p == '\0') || (*p == '@'); // exact or stdcall-suffixed
 }
 
-// --- IAT patching to hook BinkCopyToBuffer wherever it’s imported -----------
+// --------------------------------------------------------------------------------------
+// IAT patching to hook BinkCopyToBuffer wherever it’s imported  (x86 only)
 static void BnkPatchImportsInOne(HMODULE mod)
 {
-#ifndef _WIN64
+#if defined(_WIN64)
+    (void)mod;
+    return;
+#else
     if (!mod) return;
 
     char modPath[MAX_PATH]{};
@@ -663,25 +914,20 @@ static void BnkPatchImportsInOne(HMODULE mod)
     if (_stricmp(BnkBaseNameA(modPath), "binkw32.dll") == 0) return;
 
     ULONG size = 0;
-    auto* imp = (IMAGE_IMPORT_DESCRIPTOR*)ImageDirectoryEntryToData(mod, TRUE, IMAGE_DIRECTORY_ENTRY_IMPORT, &size);
+    auto* imp = (IMAGE_IMPORT_DESCRIPTOR*)
+        ImageDirectoryEntryToData(mod, TRUE, IMAGE_DIRECTORY_ENTRY_IMPORT, &size);
     if (!imp) return;
-
-    bool found = false;
 
     for (; imp->Name; ++imp)
     {
         const char* dllName = (const char*)((BYTE*)mod + imp->Name);
         if (_stricmp(dllName, "binkw32.dll") != 0) continue;
 
-        found = true;
-
         IMAGE_THUNK_DATA* oft = imp->OriginalFirstThunk
             ? (IMAGE_THUNK_DATA*)((BYTE*)mod + imp->OriginalFirstThunk)
             : (IMAGE_THUNK_DATA*)((BYTE*)mod + imp->FirstThunk);
         IMAGE_THUNK_DATA* ft = (IMAGE_THUNK_DATA*)((BYTE*)mod + imp->FirstThunk);
         if (!oft || !ft) break;
-
-        std::cout << "[BINK] Scanning IAT for: " << modPath << std::endl;
 
         for (; oft->u1.AddressOfData; ++oft, ++ft)
         {
@@ -694,33 +940,33 @@ static void BnkPatchImportsInOne(HMODULE mod)
             if (BnkNameMatches(name, "BinkCopyToBuffer"))
             {
                 DWORD old = 0;
-                if (!gReal_BinkCopyToBuffer) gReal_BinkCopyToBuffer = (PFN_BinkCopyToBuffer)ft->u1.Function;
-                VirtualProtect(&ft->u1.Function, sizeof(DWORD), PAGE_READWRITE, &old);
-                ft->u1.Function = (DWORD)hk_BinkCopyToBuffer;
-                VirtualProtect(&ft->u1.Function, sizeof(DWORD), old, &old);
-                BinkLogf("IAT hook -> BinkCopyToBuffer in %s", modPath);
+                if (!gReal_BinkCopyToBuffer)
+                    gReal_BinkCopyToBuffer = (PFN_BinkCopyToBuffer)(ULONG_PTR)ft->u1.Function;
+
+                VirtualProtect(&ft->u1.Function, sizeof(ft->u1.Function), PAGE_READWRITE, &old);
+                ft->u1.Function = (ULONG_PTR)hk_BinkCopyToBuffer;
+                VirtualProtect(&ft->u1.Function, sizeof(ft->u1.Function), old, &old);
             }
             else if (BnkNameMatches(name, "BinkCopyToBufferRect"))
             {
                 DWORD old = 0;
-                if (!gReal_BinkCopyToBufferRect) gReal_BinkCopyToBufferRect = (PFN_BinkCopyToBufferRect)ft->u1.Function;
-                VirtualProtect(&ft->u1.Function, sizeof(DWORD), PAGE_READWRITE, &old);
-                ft->u1.Function = (DWORD)hk_BinkCopyToBufferRect;
-                VirtualProtect(&ft->u1.Function, sizeof(DWORD), old, &old);
-                BinkLogf("IAT hook -> BinkCopyToBufferRect in %s", modPath);
+                if (!gReal_BinkCopyToBufferRect)
+                    gReal_BinkCopyToBufferRect = (PFN_BinkCopyToBufferRect)(ULONG_PTR)ft->u1.Function;
+
+                VirtualProtect(&ft->u1.Function, sizeof(ft->u1.Function), PAGE_READWRITE, &old);
+                ft->u1.Function = (ULONG_PTR)hk_BinkCopyToBufferRect;
+                VirtualProtect(&ft->u1.Function, sizeof(ft->u1.Function), old, &old);
             }
         }
     }
-
-    if (found)
-        std::cout << "[BINK] Finished IAT scan for: " << modPath << std::endl;
 #endif
 }
 
 static void BnkPatchAllModules()
 {
 #ifndef _WIN64
-    std::cout << "[BINK] PatchAllModules() start" << std::endl;
+    if (!gFmvHookEnabled) return;
+
     HANDLE snap = CreateToolhelp32Snapshot(TH32CS_SNAPMODULE, GetCurrentProcessId());
     if (snap == INVALID_HANDLE_VALUE) { std::cerr << "[BINK] Snapshot failed" << std::endl; return; }
 
@@ -735,7 +981,6 @@ static void BnkPatchAllModules()
     }
 
     CloseHandle(snap);
-    std::cout << "[BINK] PatchAllModules() end" << std::endl;
 #endif
 }
 
@@ -901,8 +1146,8 @@ void PerformHexEdits() {
 
 // --- Misc nop patch (as in your code) ---------------------------------------
 void PerformHexEdit7(LPBYTE lpAddress, DWORD moduleSize) {
-    struct HexEdit { std::vector<BYTE> pattern; std::vector<BYTE> newValue; size_t offset; };
-    std::vector<HexEdit> edits = {
+    struct HexEditLocal { std::vector<BYTE> pattern; std::vector<BYTE> newValue; size_t offset; };
+    std::vector<HexEditLocal> edits = {
         { { 0xE8, 0x7F, 0x24, 0x07, 0x00 }, { 0x90, 0x90, 0x90, 0x90, 0x90 }, 0 }
     };
 
@@ -1265,14 +1510,14 @@ FARPROC __stdcall hk_GetProcAddress(HMODULE hModule, LPCSTR lpProcName)
         {
             FARPROC real = GetProcAddress(hModule, lpProcName);
             if (real && !gReal_BinkCopyToBuffer) gReal_BinkCopyToBuffer = (PFN_BinkCopyToBuffer)real;
-            BinkLogf("GetProcAddress hook -> BinkCopyToBuffer");
+
             return (FARPROC)hk_BinkCopyToBuffer;
         }
         if (BnkNameMatches(lpProcName, "BinkCopyToBufferRect"))
         {
             FARPROC real = GetProcAddress(hModule, lpProcName);
             if (real && !gReal_BinkCopyToBufferRect) gReal_BinkCopyToBufferRect = (PFN_BinkCopyToBufferRect)real;
-            BinkLogf("GetProcAddress hook -> BinkCopyToBufferRect");
+
             return (FARPROC)hk_BinkCopyToBufferRect;
         }
 
@@ -1289,13 +1534,13 @@ FARPROC __stdcall hk_GetProcAddress(HMODULE hModule, LPCSTR lpProcName)
                 if (real == ctb1 || real == ctb2)
                 {
                     if (!gReal_BinkCopyToBuffer) gReal_BinkCopyToBuffer = (PFN_BinkCopyToBuffer)real;
-                    BinkLogf("GetProcAddress(ordinal) -> BinkCopyToBuffer");
+
                     return (FARPROC)hk_BinkCopyToBuffer;
                 }
                 if (real == rect1 || real == rect2)
                 {
                     if (!gReal_BinkCopyToBufferRect) gReal_BinkCopyToBufferRect = (PFN_BinkCopyToBufferRect)real;
-                    BinkLogf("GetProcAddress(ordinal) -> BinkCopyToBufferRect");
+
                     return (FARPROC)hk_BinkCopyToBufferRect;
                 }
                 return real; // some other ordinal
@@ -1308,13 +1553,13 @@ FARPROC __stdcall hk_GetProcAddress(HMODULE hModule, LPCSTR lpProcName)
         if (!lstrcmpA(lpProcName, "RegisterClassExA")) { if (!oRegisterClassExA)oRegisterClassExA = (RegisterClassExA_fn)GetProcAddress(hModule, lpProcName);  return (FARPROC)hk_RegisterClassExA; }
         if (!lstrcmpA(lpProcName, "RegisterClassExW")) { if (!oRegisterClassExW)oRegisterClassExW = (RegisterClassExW_fn)GetProcAddress(hModule, lpProcName);  return (FARPROC)hk_RegisterClassExW; }
         if (!lstrcmpA(lpProcName, "GetForegroundWindow")) { if (!oGetForegroundWindow) oGetForegroundWindow = (GetForegroundWindow_fn)GetProcAddress(hModule, lpProcName); return (FARPROC)hk_GetForegroundWindow; }
-        if (!lstrcmpA(lpProcName, "GetActiveWindow")) { if (!oGetActiveWindow) oGetActiveWindow = (GetActiveWindow_fn)GetProcAddress(hModule, lpProcName); return (FARPROC)hk_GetActiveWindow; }
-        if (!lstrcmpA(lpProcName, "GetFocus")) { if (!oGetFocus)        oGetFocus = (GetFocus_fn)GetProcAddress(hModule, lpProcName); return (FARPROC)hk_GetFocus; }
-        if (!lstrcmpA(lpProcName, "LoadLibraryA")) { if (!oLoadLibraryA)    oLoadLibraryA = (LoadLibraryA_fn)GetProcAddress(hModule, lpProcName); return (FARPROC)hk_LoadLibraryA; }
-        if (!lstrcmpA(lpProcName, "LoadLibraryW")) { if (!oLoadLibraryW)    oLoadLibraryW = (LoadLibraryW_fn)GetProcAddress(hModule, lpProcName); return (FARPROC)hk_LoadLibraryW; }
-        if (!lstrcmpA(lpProcName, "LoadLibraryExA")) { if (!oLoadLibraryExA)  oLoadLibraryExA = (LoadLibraryExA_fn)GetProcAddress(hModule, lpProcName); return (FARPROC)hk_LoadLibraryExA; }
-        if (!lstrcmpA(lpProcName, "LoadLibraryExW")) { if (!oLoadLibraryExW)  oLoadLibraryExW = (LoadLibraryExW_fn)GetProcAddress(hModule, lpProcName); return (FARPROC)hk_LoadLibraryExW; }
-        if (!lstrcmpA(lpProcName, "FreeLibrary")) { if (!oFreeLibrary)     oFreeLibrary = (FreeLibrary_fn)GetProcAddress(hModule, lpProcName); return (FARPROC)hk_FreeLibrary; }
+        if (!lstrcmpA(lpProcName, "GetActiveWindow")) { if (!oGetActiveWindow)  oGetActiveWindow = (GetActiveWindow_fn)GetProcAddress(hModule, lpProcName); return (FARPROC)hk_GetActiveWindow; }
+        if (!lstrcmpA(lpProcName, "GetFocus")) { if (!oGetFocus)         oGetFocus = (GetFocus_fn)GetProcAddress(hModule, lpProcName); return (FARPROC)hk_GetFocus; }
+        if (!lstrcmpA(lpProcName, "LoadLibraryA")) { if (!oLoadLibraryA)     oLoadLibraryA = (LoadLibraryA_fn)GetProcAddress(hModule, lpProcName); return (FARPROC)hk_LoadLibraryA; }
+        if (!lstrcmpA(lpProcName, "LoadLibraryW")) { if (!oLoadLibraryW)     oLoadLibraryW = (LoadLibraryW_fn)GetProcAddress(hModule, lpProcName); return (FARPROC)hk_LoadLibraryW; }
+        if (!lstrcmpA(lpProcName, "LoadLibraryExA")) { if (!oLoadLibraryExA)   oLoadLibraryExA = (LoadLibraryExA_fn)GetProcAddress(hModule, lpProcName); return (FARPROC)hk_LoadLibraryExA; }
+        if (!lstrcmpA(lpProcName, "LoadLibraryExW")) { if (!oLoadLibraryExW)   oLoadLibraryExW = (LoadLibraryExW_fn)GetProcAddress(hModule, lpProcName); return (FARPROC)hk_LoadLibraryExW; }
+        if (!lstrcmpA(lpProcName, "FreeLibrary")) { if (!oFreeLibrary)      oFreeLibrary = (FreeLibrary_fn)GetProcAddress(hModule, lpProcName); return (FARPROC)hk_FreeLibrary; }
     }
     __except ((GetExceptionCode() == EXCEPTION_ACCESS_VIOLATION) ? EXCEPTION_EXECUTE_HANDLER : EXCEPTION_CONTINUE_SEARCH)
     {
@@ -1529,54 +1774,89 @@ FrameLimiter::FPSLimitMode mFPSLimitMode = FrameLimiter::FPSLimitMode::FPS_NONE;
 // in the big cpp (where your FPS limiter lives)
 extern UINT gOverlayActiveFrames;
 
-extern UINT gOverlayActiveFrames;
-
-HRESULT m_IDirect3DDevice8::Present(
-    CONST RECT* pSourceRect,
-    CONST RECT* pDestRect,
+HRESULT m_IDirect3DDevice8::Present(const RECT* pSourceRect,
+    const RECT* pDestRect,
     HWND hDestWindowOverride,
-    CONST RGNDATA* pDirtyRegion)
+    const RGNDATA* pDirtyRegion)
 {
-    
+    const RECT* src = pSourceRect;
+    const RECT* dest = pDestRect;
+    HWND        hwnd = hDestWindowOverride;
+    const RGNDATA* dirty = pDirtyRegion;
 
-    // (optional) your FPS limiter...
-    if (mFPSLimitMode == FrameLimiter::FPSLimitMode::FPS_REALTIME)
-        while (!FrameLimiter::Sync_RT());
-    else if (mFPSLimitMode == FrameLimiter::FPSLimitMode::FPS_ACCURATE)
-        while (!FrameLimiter::Sync_SLP());
-
-    const RECT* destOverride = pDestRect;
-    HWND            hwndOverride = hDestWindowOverride;
-    const RGNDATA* dirtyOverride = pDirtyRegion;
-
-    if (gOverlayActiveFrames > 0)
+    if (gFmvHookEnabled && gOverlayActiveFrames > 0)
     {
-        if (pDestRect)         OutputDebugStringA("[BINK] Device::Present: overriding pDestRect -> NULL\n");
-        if (hDestWindowOverride) OutputDebugStringA("[BINK] Device::Present: overriding hDestWindowOverride -> NULL\n");
-        if (pDirtyRegion)      OutputDebugStringA("[BINK] Device::Present: overriding pDirtyRegion -> NULL\n");
+        IDirect3DSurface8* bb = nullptr;
+        if (SUCCEEDED(ProxyInterface->GetBackBuffer(0, D3DBACKBUFFER_TYPE_MONO, &bb)) && bb)
+        {
+            BinkOverlay_DrawToSurface(ProxyInterface, bb);
 
-        destOverride = nullptr;   // present to full client area
-        hwndOverride = nullptr;   // use the device window
-        dirtyOverride = nullptr;   // update whole frontbuffer
+            if (gFmvDebug) {
+                static int count = 0;
+                char buf[96];
+                _snprintf(buf, sizeof(buf), "[D3D8] Present overlay draw #%d (N=%d)\n", ++count, gUploadEveryN);
+                OutputDebugStringA(buf);
+            }
+
+            bb->Release();
+            gOverlayDrawnThisFrame = true;
+        }
+
+        if (gForceFullWindowPresent) {
+            src = nullptr; dest = nullptr; hwnd = nullptr; dirty = nullptr;
+        }
     }
 
-    return ProxyInterface->Present(pSourceRect, destOverride, hwndOverride, dirtyOverride);
+    return ProxyInterface->Present(src, dest, hwnd, dirty);
 }
-
 
 
 
 HRESULT m_IDirect3DDevice8::EndScene()
 {
-    // >>> BINK: draw our fullscreen movie overlay (if we captured a frame)
-    BinkOverlay_Draw(ProxyInterface);
-    // <<<
-
     if (bDisplayFPSCounter)
         FrameLimiter::ShowFPS(ProxyInterface);
+
     return ProxyInterface->EndScene();
 }
 
+HRESULT m_IDirect3DSwapChain8::Present(
+    const RECT* pSourceRect,
+    const RECT* pDestRect,
+    HWND hDestWindowOverride,
+    const RGNDATA* pDirtyRegion)
+{
+    const RECT* src = pSourceRect;
+    const RECT* dest = pDestRect;
+    HWND        hwnd = hDestWindowOverride;
+    const RGNDATA* dirty = pDirtyRegion;
+
+    if (gOverlayActiveFrames > 0)
+    {
+        IDirect3DSurface8* bb = nullptr;
+        if (SUCCEEDED(ProxyInterface->GetBackBuffer(0, D3DBACKBUFFER_TYPE_MONO, &bb)) && bb)
+        {
+            // pass the REAL D3D8 device to the overlay
+            BinkOverlay_DrawToSurface(m_pDevice->GetProxyInterface(), bb);
+            bb->Release();
+            gOverlayDrawnThisFrame = true;
+        }
+
+        // force a full-window flip to kill the tiny box
+        src = nullptr; dest = nullptr; hwnd = nullptr; dirty = nullptr;
+    }
+    else if (src)
+    {
+        const LONG w = src->right - src->left;
+        const LONG h = src->bottom - src->top;
+        if (w > 0 && h > 0 && (w <= 800 || h <= 600))
+        {
+            src = nullptr; dest = nullptr; hwnd = nullptr; dirty = nullptr;
+        }
+    }
+
+    return ProxyInterface->Present(src, dest, hwnd, dirty);
+}
 
 // ============================================================================
 // Windowing helpers
@@ -1672,7 +1952,6 @@ HRESULT m_IDirect3D8::CreateDevice(UINT Adapter, D3DDEVTYPE DeviceType, HWND hFo
 
     gTargetW = p->BackBufferWidth;
     gTargetH = p->BackBufferHeight;
-    DX_PRINT("[D3D8] CreateDevice -> BackBuffer " << gTargetW << "x" << gTargetH);
 
     HRESULT hr = ProxyInterface->CreateDevice(Adapter, DeviceType, hFocusWindow, BehaviorFlags, p, ppReturnedDeviceInterface);
     if (SUCCEEDED(hr) && ppReturnedDeviceInterface)
@@ -1682,10 +1961,19 @@ HRESULT m_IDirect3D8::CreateDevice(UINT Adapter, D3DDEVTYPE DeviceType, HWND hFo
 
 HRESULT m_IDirect3DDevice8::Reset(D3DPRESENT_PARAMETERS* p)
 {
+    // --- FMV overlay: release default-pool resources and clear stabilizer ---
+    if (gOverlayTex) { gOverlayTex->Release(); gOverlayTex = nullptr; gOverlayTexW = gOverlayTexH = 0; }
+    gOverlayFrame.clear();
+    gOverlayDirty = false;
+    gOverlayActiveFrames = 0;
+    gCropLocked = false;
+    gHasRectHint = false;
+    gLockSrcW = gLockSrcH = 0;
+    gStable = {}; gPrevStable = {}; gDetected = {};
+
     if (bForceWindowedMode) ForceWindowed(p);
     gTargetW = p->BackBufferWidth;
     gTargetH = p->BackBufferHeight;
-    DX_PRINT("[D3D8] Reset -> BackBuffer " << gTargetW << "x" << gTargetH);
 
     if (nFullScreenRefreshRateInHz) ForceFullScreenRefreshRateInHz(p);
 
@@ -1699,6 +1987,7 @@ HRESULT m_IDirect3DDevice8::Reset(D3DPRESENT_PARAMETERS* p)
 
     return ProxyInterface->Reset(p);
 }
+
 
 
 // ============================================================================
@@ -1732,6 +2021,7 @@ bool WINAPI DllMain(HMODULE hModule, DWORD dwReason, LPVOID)
         PerformHexEdits7();
         PerformHexEdits();
         PerformHexEdits3();
+        CharSwap::Init();
 
         // Get function addresses
         m_pDirect3D8EnableMaximizedWindowedModeShim = (Direct3D8EnableMaximizedWindowedModeShimProc)GetProcAddress(sD3D8, "Direct3D8EnableMaximizedWindowedModeShim");
@@ -1758,12 +2048,50 @@ bool WINAPI DllMain(HMODULE hModule, DWORD dwReason, LPVOID)
         bAlwaysOnTop = GetPrivateProfileIntA("FORCEWINDOWED", "AlwaysOnTop", 0, path) != 0;
         bDoNotNotifyOnTaskSwitch = GetPrivateProfileIntA("FORCEWINDOWED", "DoNotNotifyOnTaskSwitch", 0, path) != 0;
 
-        // Movie size hints (now used as hard size if non-zero)
+        // --- FMV master toggle
+        gFmvHookEnabled = (GetPrivateProfileIntA("FMV", "Hook", 1, path) != 0);
+
+        // --- Read FMV settings (with defaults matching previous hard-coded behaviour)
+        gCfgFmvStretch = (GetPrivateProfileIntA("FMV", "Stretch", gCfgFmvStretch ? 1 : 0, path) != 0);
+        gCfgFmvKeepAspect = (GetPrivateProfileIntA("FMV", "KeepAspect", gCfgFmvKeepAspect ? 1 : 0, path) != 0);
+        // gCfgFmvDetectCrop = (GetPrivateProfileIntA("FMV", "DetectCrop", gCfgFmvDetectCrop ? 1 : 0, path) != 0);
+        gCfgFmvUploadEveryN = GetPrivateProfileIntA("FMV", "UploadEveryN", gCfgFmvUploadEveryN, path);
+        // gCfgFmvForceFullWindowPresent = (GetPrivateProfileIntA("FMV", "ForceFullWindowPresent", gCfgFmvForceFullWindowPresent ? 1 : 0, path) != 0);
+        // gCfgFmvDebug = (GetPrivateProfileIntA("FMV", "Debug", gCfgFmvDebug ? 1 : 0, path) != 0);
+
+        // Clamp / sanitize
+        if (gCfgFmvUploadEveryN < 1) gCfgFmvUploadEveryN = 1;
+
+        // --- Read optional fixed movie size and offsets
         gMovieW = (unsigned)GetPrivateProfileIntA("MOVIE_SIZE", "Width", 0, path);
         gMovieH = (unsigned)GetPrivateProfileIntA("MOVIE_SIZE", "Height", 0, path);
-        DX_PRINT(std::string("[INI] MOVIE_SIZE -> ") + std::to_string(gMovieW) + "x" + std::to_string(gMovieH));
+        gCfgMovieOffsetX = GetPrivateProfileIntA("MOVIE_SIZE", "OffsetX", 0, path);
+        gCfgMovieOffsetY = GetPrivateProfileIntA("MOVIE_SIZE", "OffsetY", 0, path);
 
-      
+        // NOTE: For compatibility, allow [MOVIE_SIZE] Stretch to force stretching as well.
+        // If either [FMV].Stretch=1 or [MOVIE_SIZE].Stretch=1, we stretch.
+        const bool movieSizeStretch = (GetPrivateProfileIntA("MOVIE_SIZE", "Stretch", 0, path) != 0);
+
+        // --- Apply to runtime flags the overlay actually uses
+        gMovieStretch = (gCfgFmvStretch || movieSizeStretch);
+        gKeepAspect = gCfgFmvKeepAspect;
+        gDetectCrop = kHardDetectCrop;
+        gForceFullWindowPresent = kHardForceFullWindowPresent;
+        gUploadEveryN = gCfgFmvUploadEveryN;
+        gFmvDebug = kHardDebug;
+        gMovieOffsetX = gCfgMovieOffsetX;
+        gMovieOffsetY = gCfgMovieOffsetY;
+
+        // Optional: brief log
+        {
+            char buf[256];
+            _snprintf(buf, sizeof(buf),
+                "[INI][FMV] Hook=%d Stretch=%d KeepAspect=%d DetectCrop=%d UploadEveryN=%d ForceFullWindowPresent=%d Debug=%d | [MOVIE_SIZE] W=%u H=%u Off=(%d,%d) MS_Stretch=%d\n",
+                gFmvHookEnabled ? 1 : 0, gMovieStretch ? 1 : 0, gKeepAspect ? 1 : 0, gDetectCrop ? 1 : 0,
+                gUploadEveryN, gForceFullWindowPresent ? 1 : 0, gFmvDebug ? 1 : 0,
+                gMovieW, gMovieH, gMovieOffsetX, gMovieOffsetY, movieSizeStretch ? 1 : 0);
+            OutputDebugStringA(buf);
+        }
 
         if (bDirect3D8DisableMaximizedWindowedModeShim)
         {
@@ -1839,6 +2167,9 @@ bool WINAPI DllMain(HMODULE hModule, DWORD dwReason, LPVOID)
 
         if (gOverlayTex) { gOverlayTex->Release(); gOverlayTex = nullptr; }
         if (sD3D8) FreeLibrary(sD3D8);
+
+        CharSwap::Shutdown();
+
         break;
     }
     }
