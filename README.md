@@ -39,7 +39,7 @@ For the fix to work properly you must have patched the game up to the **1.3 rele
 
 # Important Information
 
-**Chip** has spent some time reverse engineering an issue where the game was crashing on start up, this has now been traced to the cause and a dinput.dll has now been included into start-up-crash-with-controller-fix.zip in releases to address this so there should be no more start-up crash issues.
+**Chip** has spent some time reverse engineering an issue where the game was crashing on start up, this has now been traced to the cause and has written a custom dinput.dll wrapper which has now been included into start-up-crash-with-controller-fix.zip in releases to address this so there should be no more start-up crash issues.
 <br><br>
 
 # Instructions
