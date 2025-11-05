@@ -8,6 +8,13 @@
 [![FMV](https://img.shields.io/badge/Icon-%20Enhancement-FF0000?style=flat)](#enhanced-game-icon)
 [![PCGamingWiki – Essential improvements](https://img.shields.io/badge/PCGamingWiki-Essential%20improvements-0066cc?style=flat&logo=pcgamingwiki&logoColor=white)](https://www.pcgamingwiki.com/wiki/Spider-Man_(2002))
 
+<div align="center">
+
+# 🎮 Created and maintained by **Chip-Biscuit**
+Reverse Engineering • Patches • Game Enhancements
+
+</div>
+
 <br><br>
 # Spider-Man the Movie Video Game 2002 PC Fix
 ![sm2002](https://github.com/user-attachments/assets/096f330c-4ca2-4245-bd8b-5eeb871d2bdd)
