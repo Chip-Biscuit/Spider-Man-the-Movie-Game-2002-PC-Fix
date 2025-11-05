@@ -10,8 +10,9 @@
 
 <div align="center">
 
-# 🎮 Game Specific Patches - Created and maintained by **Chip-Biscuit**
-Reverse Engineering • Patches • Programming • Game Enhancements 
+# 🎮 Game Specific Patches  
+### Created & Maintained by **[Chip-Biscuit](https://chip-biscuit.github.io/)**
+Reverse Engineering • Programming • Patching • Game Improvements  
 
 </div>
 
