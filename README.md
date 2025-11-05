@@ -10,7 +10,7 @@
 
 <div align="center">
 
-# 🎮 Created and maintained by **Chip-Biscuit**
+# 🎮 Game Specific Patches - Created and maintained by **Chip-Biscuit**
 Reverse Engineering • Patches • programmer • Game Enhancements 
 
 </div>
