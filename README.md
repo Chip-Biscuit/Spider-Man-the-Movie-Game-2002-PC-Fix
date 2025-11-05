@@ -11,7 +11,7 @@
 <div align="center">
 
 # 🎮 Game Specific Patches - Created and maintained by **Chip-Biscuit**
-Reverse Engineering • Patches • programming • Game Enhancements 
+Reverse Engineering • Patches • Programming • Game Enhancements 
 
 </div>
 
